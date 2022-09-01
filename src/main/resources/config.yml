@@ -1,0 +1,10 @@
+#Welcome to OfflinePlayers
+#This Plugin spawns a clone from a Player if he is offline at his logout location!
+#Here you can configure the plugin and the behavior of the offline clones.
+
+OfflinePlayer:
+  isHittable: true #If the clone is damageable.
+  hasAI: false #If ture the clone is able to move randomly or being pushed and get knocked back.
+  nameAlwaysVisible: true #If false the name of the clone is only visible if you hover on the clone.
+  name: "§8§lOffline §7- §c%PLAYER_NAME" #The name of the clone. %PLAYER_NAME will be replaced with the name of the player.
+  hasGravity: true #If false the clone is not affected by gravity. (Only works if 'hasAI' is false)
