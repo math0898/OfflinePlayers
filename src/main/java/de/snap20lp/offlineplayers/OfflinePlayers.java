@@ -27,7 +27,7 @@ import java.util.UUID;
 @Getter
 public class OfflinePlayers extends JavaPlugin implements Listener {
 
-    private final double version = 1.0;
+    private final double version = 1.1;
     private final HashMap<UUID, OfflinePlayer> offlinePlayerList = new HashMap<>();
     private final HashMap<Integer, OfflinePlayer> entityOfflinePlayerHashMap = new HashMap<>();
 

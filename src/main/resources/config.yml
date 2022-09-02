@@ -6,5 +6,8 @@ OfflinePlayer:
   isHittable: true #If the clone is damageable.
   hasAI: false #If ture the clone is able to move randomly or being pushed and get knocked back.
   nameAlwaysVisible: true #If false the name of the clone is only visible if you hover on the clone.
-  name: "§8§lOffline §7- §c%PLAYER_NAME" #The name of the clone. %PLAYER_NAME will be replaced with the name of the player.
+  name: "§8§lOffline §7- §c%PLAYER_NAME §e%DESPAWN_TIMER%" #The name of the clone. %PLAYER_NAME will be replaced with the name of the player. %DESPAWN_TIMER% will be replaced with the time until the clone despawns.
   hasGravity: true #If false the clone is not affected by gravity. (Only works if 'hasAI' is false)
+  de-spawnTimer:
+    enabled: true
+    timer: 20 #The time in seconds the clone is de-spawned after it is spawned.

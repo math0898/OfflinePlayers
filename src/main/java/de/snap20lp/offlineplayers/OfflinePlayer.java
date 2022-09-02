@@ -2,6 +2,7 @@ package de.snap20lp.offlineplayers;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -21,8 +22,13 @@ public class OfflinePlayer implements Listener {
     private final ItemStack offHand;
     private final int playerExp;
     private final String customName;
+
+    private int currentSeconds = 0;
+    private int despawnTask = 0;
+    private final int despawnTimerSeconds = OfflinePlayers.getInstance().getConfig().getInt("OfflinePlayer.de-spawnTimer.timer");
+
     @Setter
-    private boolean isHittable = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.isHittable"), hasAI = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.hasAI"), nameAlwaysVisible = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.nameAlwaysVisible"), isDead = false, hasGravity = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.hasGravity");
+    private boolean isHittable = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.isHittable"), hasAI = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.hasAI"), nameAlwaysVisible = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.nameAlwaysVisible"), isDead = false, hasGravity = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.hasGravity"),despawnTimerEnabled = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.de-spawnTimer.enabled");
     private LivingEntity cloneEntity;
 
     public OfflinePlayer(Player player, ItemStack[] inventoryContents, ItemStack[] armorContents, ItemStack mainHand, ItemStack offHand) {
@@ -35,12 +41,41 @@ public class OfflinePlayer implements Listener {
         this.currentHP = player.getHealth();
         String customName = OfflinePlayers.getInstance().getConfig().getString("OfflinePlayer.name");
         customName = customName.replaceAll("%PLAYER_NAME", player.getName());
+        customName = customName.replaceAll("%DESPAWN_TIMER%", String.valueOf(despawnTimerSeconds-currentSeconds));
         this.customName = customName;
+
         spawnClone();
+
+        if(despawnTimerEnabled) {
+            despawnTask = Bukkit.getScheduler().scheduleSyncRepeatingTask(OfflinePlayers.getInstance(), new Runnable() {
+                @Override
+                public void run() {
+                    if(currentSeconds >= despawnTimerSeconds-1) {
+                        despawnClone();
+                        cancelTask();
+                        return;
+                    }
+                    currentSeconds++;
+                    if(cloneEntity.isValid()) {
+                        String customName = OfflinePlayers.getInstance().getConfig().getString("OfflinePlayer.name");
+                        customName = customName.replaceAll("%PLAYER_NAME", player.getName());
+                        customName = customName.replaceAll("%DESPAWN_TIMER%", String.valueOf(despawnTimerSeconds-currentSeconds));
+                        cloneEntity.setCustomName(customName);
+                    }
+                }
+            },20,20);
+        }
+    }
+
+    private void cancelTask() {
+        Bukkit.getScheduler().cancelTask(despawnTask);
     }
 
 
     public void spawnClone() {
+
+
+
         Zombie clone = (Zombie) offlinePlayer.getPlayer().getWorld().spawnEntity(offlinePlayer.getPlayer().getLocation(), EntityType.ZOMBIE);
         clone.setCanPickupItems(false);
         clone.setAdult();
