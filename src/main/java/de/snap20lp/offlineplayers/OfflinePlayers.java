@@ -6,16 +6,14 @@ import de.snap20lp.offlineplayers.events.OfflinePlayerHitEvent;
 import de.snap20lp.offlineplayers.events.OfflinePlayerSpawnEvent;
 import lombok.Getter;
 import org.bukkit.Bukkit;
+import org.bukkit.Difficulty;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityCombustEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.entity.EntityTargetEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
@@ -27,7 +25,7 @@ import java.util.UUID;
 @Getter
 public class OfflinePlayers extends JavaPlugin implements Listener {
 
-    private final double version = 1.1;
+    private final double version = 1.2;
     private final HashMap<UUID, OfflinePlayer> offlinePlayerList = new HashMap<>();
     private final HashMap<Integer, OfflinePlayer> entityOfflinePlayerHashMap = new HashMap<>();
 
@@ -40,6 +38,12 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
         System.out.println("OfflinePlayers starting in version " + getVersion());
         this.saveDefaultConfig();
         Bukkit.getPluginManager().registerEvents(this, this);
+        getServer().getWorlds().forEach(world -> {
+            if(world.getDifficulty() == Difficulty.PEACEFUL) {
+                world.setDifficulty(Difficulty.EASY);
+                System.out.println("  Set difficulty to EASY for world " + world.getName() + " to make OfflinePlayers work!");
+            }
+        });
     }
 
     @Override
@@ -60,8 +64,12 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
             clone.despawnClone();
             playerJoinEvent.getPlayer().teleport(clone.getCloneEntity().getLocation());
             playerJoinEvent.getPlayer().addPotionEffects(clone.getCloneEntity().getActivePotionEffects());
+
+            //Bug fix 1.2 | Thank you for the support :)
+            playerJoinEvent.getPlayer().getInventory().setItemInMainHand(clone.getCloneEntity().getEquipment().getItemInMainHand());
+            playerJoinEvent.getPlayer().getInventory().setItemInOffHand(clone.getCloneEntity().getEquipment().getItemInOffHand());
+            
             if (clone.isDead()) {
-                playerJoinEvent.getPlayer().getInventory().clear();
                 if (playerJoinEvent.getPlayer().getEquipment() != null) {
                     playerJoinEvent.getPlayer().getEquipment().clear();
                 }
@@ -82,7 +90,6 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().callEvent(offlinePlayerSpawnEvent);
         getOfflinePlayerList().put(quitPlayer.getUniqueId(), offlinePlayer);
         getEntityOfflinePlayerHashMap().put(offlinePlayer.getCloneEntity().getEntityId(), offlinePlayer);
-
     }
 
     @EventHandler
@@ -102,7 +109,6 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
         }
     }
 
-
     @EventHandler
     public void on(EntityDeathEvent event) {
         if (getEntityOfflinePlayerHashMap().containsKey(event.getEntity().getEntityId())) {
@@ -112,33 +118,31 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
             Bukkit.getPluginManager().callEvent(offlinePlayerDeathEvent);
 
             event.getDrops().clear();
-            for (ItemStack inventoryContent : offlinePlayer.getInventoryContents()) {
+            for (ItemStack inventoryContent : offlinePlayer.getSavedInventoryContents()) {
                 if (inventoryContent != null) {
                     event.getDrops().add(inventoryContent);
                 }
             }
             event.setDroppedExp(offlinePlayer.getPlayerExp());
-            getEntityOfflinePlayerHashMap().get(event.getEntity().getEntityId()).despawnClone();
+            Bukkit.getScheduler().scheduleSyncDelayedTask(this, () -> getEntityOfflinePlayerHashMap().get(event.getEntity().getEntityId()).despawnClone(),25);
             getEntityOfflinePlayerHashMap().get(event.getEntity().getEntityId()).setDead(true);
 
         }
     }
-
     @EventHandler
     public void on(EntityDamageByEntityEvent event) {
-        if (event.getDamager() instanceof Player && event.getEntity().getType() == EntityType.ZOMBIE) {
-            if (getEntityOfflinePlayerHashMap().containsKey(event.getEntity().getEntityId())) {
-                Player damager = (Player) event.getDamager();
-                OfflinePlayer offlinePlayer = getEntityOfflinePlayerHashMap().get(event.getEntity().getEntityId());
-                if (!offlinePlayer.isHittable()) {
-                    event.setCancelled(true);
-                } else {
-                    OfflinePlayerHitEvent offlinePlayerHitEvent = new OfflinePlayerHitEvent(offlinePlayer, damager);
-                    Bukkit.getPluginManager().callEvent(offlinePlayerHitEvent);
+        if (event.getEntity().getType() == EntityType.ZOMBIE && getEntityOfflinePlayerHashMap().containsKey(event.getEntity().getEntityId()) && event.getDamager() instanceof Player) {
+            OfflinePlayer offlinePlayer = getEntityOfflinePlayerHashMap().get(event.getEntity().getEntityId());
+                    Player damager = (Player) event.getDamager();
+                    if (!offlinePlayer.isHittable()) {
+                        event.setCancelled(true);
+                    } else {
+                        OfflinePlayerHitEvent offlinePlayerHitEvent = new OfflinePlayerHitEvent(offlinePlayer, damager);
+                        Bukkit.getPluginManager().callEvent(offlinePlayerHitEvent);
+                    }
+                    damager.playSound(damager.getLocation(), Sound.ENTITY_PLAYER_HURT, 100, 1);
                 }
-                damager.playSound(damager.getLocation(), Sound.ENTITY_PLAYER_HURT, 100, 1);
-            }
-        }
+
     }
 
 }

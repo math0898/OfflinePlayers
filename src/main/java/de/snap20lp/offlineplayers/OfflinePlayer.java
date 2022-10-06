@@ -16,27 +16,27 @@ public class OfflinePlayer implements Listener {
 
     private final org.bukkit.OfflinePlayer offlinePlayer;
     private final double currentHP;
-    private final ItemStack[] inventoryContents;
-    private final ItemStack[] armorContents;
+    private final ItemStack[] savedInventoryContents;
+    private final ItemStack[] savedArmorContents;
     private final ItemStack mainHand;
     private final ItemStack offHand;
     private final int playerExp;
     private final String customName;
 
     private int currentSeconds = 0;
-    private int despawnTask = 0;
+    private int despawnTask = 0,gravityTask = 0;
     private final int despawnTimerSeconds = OfflinePlayers.getInstance().getConfig().getInt("OfflinePlayer.de-spawnTimer.timer");
 
     @Setter
     private boolean isHittable = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.isHittable"), hasAI = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.hasAI"), nameAlwaysVisible = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.nameAlwaysVisible"), isDead = false, hasGravity = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.hasGravity"),despawnTimerEnabled = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.de-spawnTimer.enabled");
     private LivingEntity cloneEntity;
 
-    public OfflinePlayer(Player player, ItemStack[] inventoryContents, ItemStack[] armorContents, ItemStack mainHand, ItemStack offHand) {
+    public OfflinePlayer(Player player, ItemStack[] savedInventoryContents, ItemStack[] savedArmorContents, ItemStack mainHand, ItemStack offHand) {
         this.offlinePlayer = player;
         this.mainHand = mainHand;
         this.offHand = offHand;
-        this.inventoryContents = inventoryContents;
-        this.armorContents = armorContents;
+        this.savedInventoryContents = savedInventoryContents;
+        this.savedArmorContents = savedArmorContents;
         this.playerExp = player.getTotalExperience();
         this.currentHP = player.getHealth();
         String customName = OfflinePlayers.getInstance().getConfig().getString("OfflinePlayer.name");
@@ -46,13 +46,14 @@ public class OfflinePlayer implements Listener {
 
         spawnClone();
 
+
         if(despawnTimerEnabled) {
             despawnTask = Bukkit.getScheduler().scheduleSyncRepeatingTask(OfflinePlayers.getInstance(), new Runnable() {
                 @Override
                 public void run() {
                     if(currentSeconds >= despawnTimerSeconds-1) {
                         despawnClone();
-                        cancelTask();
+                        cancelDespawnTask();
                         return;
                     }
                     currentSeconds++;
@@ -66,29 +67,43 @@ public class OfflinePlayer implements Listener {
             },20,20);
         }
     }
-
-    private void cancelTask() {
+    private void cancelGravityTask() {
+        Bukkit.getScheduler().cancelTask(gravityTask);
+    }
+    private void cancelDespawnTask() {
         Bukkit.getScheduler().cancelTask(despawnTask);
     }
 
 
     public void spawnClone() {
 
-
-
         Zombie clone = (Zombie) offlinePlayer.getPlayer().getWorld().spawnEntity(offlinePlayer.getPlayer().getLocation(), EntityType.ZOMBIE);
         clone.setCanPickupItems(false);
         clone.setAdult();
         clone.setSilent(true);
         clone.setAI(hasAI);
-        clone.setGravity(hasGravity);
+        clone.setGravity(true);
         clone.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(currentHP);
         clone.setHealth(currentHP);
-        clone.getEquipment().setArmorContents(armorContents);
+        clone.getEquipment().setArmorContents(savedArmorContents);
         clone.getEquipment().setItemInMainHand(mainHand);
         clone.getEquipment().setItemInOffHand(offHand);
         clone.setCustomNameVisible(nameAlwaysVisible);
         clone.setCustomName(customName);
+        System.out.println(clone.getLocation().subtract(0,1,0).getBlock().getType());
+        if(!OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.hasAI") && OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.hasGravity") && !clone.isOnGround()) {
+            clone.setAI(true);
+           gravityTask = Bukkit.getScheduler().scheduleSyncRepeatingTask(OfflinePlayers.getInstance(), new Runnable() {
+                @Override
+                public void run() {
+                    if(clone.isOnGround()) {
+                        clone.setAI(false);
+                        cancelGravityTask();
+                    }
+                }
+            },1,1);
+        }
+
         this.cloneEntity = clone;
     }
 
