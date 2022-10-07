@@ -3,6 +3,7 @@ package de.snap20lp.offlineplayers;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -10,6 +11,16 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Zombie;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.Vector;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Getter
 public class OfflinePlayer implements Listener {
@@ -22,9 +33,9 @@ public class OfflinePlayer implements Listener {
     private final ItemStack offHand;
     private final int playerExp;
     private final String customName;
-
     private int currentSeconds = 0;
-    private int despawnTask = 0,gravityTask = 0;
+    private int despawnTask = 0;
+
     private final int despawnTimerSeconds = OfflinePlayers.getInstance().getConfig().getInt("OfflinePlayer.de-spawnTimer.timer");
 
     @Setter
@@ -46,7 +57,6 @@ public class OfflinePlayer implements Listener {
 
         spawnClone();
 
-
         if(despawnTimerEnabled) {
             despawnTask = Bukkit.getScheduler().scheduleSyncRepeatingTask(OfflinePlayers.getInstance(), new Runnable() {
                 @Override
@@ -66,9 +76,7 @@ public class OfflinePlayer implements Listener {
                 }
             },20,20);
         }
-    }
-    private void cancelGravityTask() {
-        Bukkit.getScheduler().cancelTask(gravityTask);
+
     }
     private void cancelDespawnTask() {
         Bukkit.getScheduler().cancelTask(despawnTask);
@@ -81,7 +89,11 @@ public class OfflinePlayer implements Listener {
         clone.setCanPickupItems(false);
         clone.setAdult();
         clone.setSilent(true);
-        clone.setAI(hasAI);
+        clone.setAI(false);
+        if(hasAI) {
+            clone.setAI(true);
+            clone.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, Integer.MAX_VALUE, 255, false, false, false));
+        }
         clone.setGravity(true);
         clone.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(currentHP);
         clone.setHealth(currentHP);
@@ -90,20 +102,6 @@ public class OfflinePlayer implements Listener {
         clone.getEquipment().setItemInOffHand(offHand);
         clone.setCustomNameVisible(nameAlwaysVisible);
         clone.setCustomName(customName);
-        System.out.println(clone.getLocation().subtract(0,1,0).getBlock().getType());
-        if(!OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.hasAI") && OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.hasGravity") && !clone.isOnGround()) {
-            clone.setAI(true);
-           gravityTask = Bukkit.getScheduler().scheduleSyncRepeatingTask(OfflinePlayers.getInstance(), new Runnable() {
-                @Override
-                public void run() {
-                    if(clone.isOnGround()) {
-                        clone.setAI(false);
-                        cancelGravityTask();
-                    }
-                }
-            },1,1);
-        }
-
         this.cloneEntity = clone;
     }
 

@@ -3,11 +3,11 @@
 #Here you can configure the plugin and the behavior of the offline clones.
 
 OfflinePlayer:
+  spawnOnCreative: false #If true the clone will spawn when the player is in creative mode.
   isHittable: true #If the clone is damageable.
-  hasAI: false #If ture the clone is able to move randomly or being pushed and get knocked back.
-  nameAlwaysVisible: true #If false the name of the clone is only visible if you hover on the clone.
+  hasAI: true #If true the clone is able to be fall down, pushed or knocked back.
+  nameAlwaysVisible: true #If false the name of the clone is only visible if you hover on it.
   name: "§8§lOffline §7- §c%PLAYER_NAME §e%DESPAWN_TIMER%" #The name of the clone. %PLAYER_NAME will be replaced with the name of the player. %DESPAWN_TIMER% will be replaced with the time until the clone despawns.
-  hasGravity: true #Only works when entity is spawned. Won't work if blocks break under the clone.
   de-spawnTimer:
     enabled: true
     timer: 20 #The time in seconds the clone is de-spawned after it is spawned.

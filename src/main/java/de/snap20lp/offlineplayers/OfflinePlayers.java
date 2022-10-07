@@ -1,14 +1,12 @@
 package de.snap20lp.offlineplayers;
 
+import com.google.gson.Gson;
 import de.snap20lp.offlineplayers.events.OfflinePlayerDeathEvent;
 import de.snap20lp.offlineplayers.events.OfflinePlayerDespawnEvent;
 import de.snap20lp.offlineplayers.events.OfflinePlayerHitEvent;
 import de.snap20lp.offlineplayers.events.OfflinePlayerSpawnEvent;
 import lombok.Getter;
-import org.bukkit.Bukkit;
-import org.bukkit.Difficulty;
-import org.bukkit.Material;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -17,18 +15,22 @@ import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.UUID;
 
 @Getter
 public class OfflinePlayers extends JavaPlugin implements Listener {
 
-    private final double version = 1.2;
+    private final double version = 1.3;
     private final HashMap<UUID, OfflinePlayer> offlinePlayerList = new HashMap<>();
     private final HashMap<Integer, OfflinePlayer> entityOfflinePlayerHashMap = new HashMap<>();
-
     public static OfflinePlayers getInstance() {
         return getPlugin(OfflinePlayers.class);
     }
@@ -50,8 +52,10 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
     public void onDisable() {
         getOfflinePlayerList().values().forEach(offlinePlayer -> {
             offlinePlayer.despawnClone();
+            offlinePlayer.getCloneEntity().remove();
         });
     }
+
 
     @EventHandler
     public void on(PlayerJoinEvent playerJoinEvent) {
@@ -61,14 +65,18 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
             OfflinePlayerDespawnEvent offlinePlayerDespawnEvent = new OfflinePlayerDespawnEvent(clone);
             Bukkit.getPluginManager().callEvent(offlinePlayerDespawnEvent);
 
-            clone.despawnClone();
+
             playerJoinEvent.getPlayer().teleport(clone.getCloneEntity().getLocation());
             playerJoinEvent.getPlayer().addPotionEffects(clone.getCloneEntity().getActivePotionEffects());
 
             //Bug fix 1.2 | Thank you for the support :)
             playerJoinEvent.getPlayer().getInventory().setItemInMainHand(clone.getCloneEntity().getEquipment().getItemInMainHand());
             playerJoinEvent.getPlayer().getInventory().setItemInOffHand(clone.getCloneEntity().getEquipment().getItemInOffHand());
-            
+
+            if(clone.getCloneEntity().hasPotionEffect(PotionEffectType.SLOW) && clone.isHasAI()) {
+                playerJoinEvent.getPlayer().removePotionEffect(PotionEffectType.SLOW);
+            }
+
             if (clone.isDead()) {
                 if (playerJoinEvent.getPlayer().getEquipment() != null) {
                     playerJoinEvent.getPlayer().getEquipment().clear();
@@ -79,17 +87,21 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
             } else {
                 playerJoinEvent.getPlayer().setHealth(clone.getCloneEntity().getHealth());
             }
+            clone.despawnClone();
         }
     }
 
     @EventHandler
     public void on(PlayerQuitEvent playerQuitEvent) {
         Player quitPlayer = playerQuitEvent.getPlayer();
-        OfflinePlayer offlinePlayer = new OfflinePlayer(quitPlayer, quitPlayer.getInventory().getContents(), quitPlayer.getEquipment() == null ? new ItemStack[]{} : quitPlayer.getEquipment().getArmorContents(), quitPlayer.getEquipment().getItemInMainHand(), quitPlayer.getEquipment().getItemInOffHand());
-        OfflinePlayerSpawnEvent offlinePlayerSpawnEvent = new OfflinePlayerSpawnEvent(offlinePlayer);
-        Bukkit.getPluginManager().callEvent(offlinePlayerSpawnEvent);
-        getOfflinePlayerList().put(quitPlayer.getUniqueId(), offlinePlayer);
-        getEntityOfflinePlayerHashMap().put(offlinePlayer.getCloneEntity().getEntityId(), offlinePlayer);
+        if(quitPlayer.getGameMode() == GameMode.CREATIVE && !getConfig().getBoolean("OfflinePlayer.spawnOnCreative")) {
+            return;
+        }
+            OfflinePlayer offlinePlayer = new OfflinePlayer(quitPlayer, quitPlayer.getInventory().getContents(), quitPlayer.getEquipment() == null ? new ItemStack[]{} : quitPlayer.getEquipment().getArmorContents(), quitPlayer.getEquipment().getItemInMainHand(), quitPlayer.getEquipment().getItemInOffHand());
+            OfflinePlayerSpawnEvent offlinePlayerSpawnEvent = new OfflinePlayerSpawnEvent(offlinePlayer);
+            Bukkit.getPluginManager().callEvent(offlinePlayerSpawnEvent);
+            getOfflinePlayerList().put(quitPlayer.getUniqueId(), offlinePlayer);
+            getEntityOfflinePlayerHashMap().put(offlinePlayer.getCloneEntity().getEntityId(), offlinePlayer);
     }
 
     @EventHandler
@@ -129,6 +141,16 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
 
         }
     }
+
+    @EventHandler
+    public void on(EntityDamageEvent event) {
+        if (event.getEntity().getType() == EntityType.ZOMBIE && getEntityOfflinePlayerHashMap().containsKey(event.getEntity().getEntityId())) {
+            OfflinePlayer offlinePlayer = getEntityOfflinePlayerHashMap().get(event.getEntity().getEntityId());
+            if (!offlinePlayer.isHittable()) {
+                event.setCancelled(true);
+            }
+        }
+        }
     @EventHandler
     public void on(EntityDamageByEntityEvent event) {
         if (event.getEntity().getType() == EntityType.ZOMBIE && getEntityOfflinePlayerHashMap().containsKey(event.getEntity().getEntityId()) && event.getDamager() instanceof Player) {
@@ -139,10 +161,9 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
                     } else {
                         OfflinePlayerHitEvent offlinePlayerHitEvent = new OfflinePlayerHitEvent(offlinePlayer, damager);
                         Bukkit.getPluginManager().callEvent(offlinePlayerHitEvent);
+                        damager.playSound(damager.getLocation(), Sound.ENTITY_PLAYER_HURT, 100, 1);
                     }
-                    damager.playSound(damager.getLocation(), Sound.ENTITY_PLAYER_HURT, 100, 1);
                 }
-
     }
 
 }
