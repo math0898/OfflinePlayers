@@ -28,7 +28,7 @@ import java.util.*;
 @Getter
 public class OfflinePlayers extends JavaPlugin implements Listener {
 
-    private final double version = 1.5;
+    private final double version = 1.6;
     private boolean isCitizensEnabled = false;
     private final HashMap<UUID, OfflinePlayer> offlinePlayerList = new HashMap<>();
     private final HashMap<Integer, OfflinePlayer> entityOfflinePlayerHashMap = new HashMap<>();
@@ -131,6 +131,15 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
     @EventHandler
     public void on(PlayerQuitEvent playerQuitEvent) {
         Player quitPlayer = playerQuitEvent.getPlayer();
+        if(getConfig().getStringList("OfflinePlayer.worldBlacklist").contains(quitPlayer.getWorld().getName())) {
+            return;
+        }
+        if(getConfig().getBoolean("OfflinePlayer.permissions.enabled") && getConfig().getString("OfflinePlayer.permissions.permission") != null) {
+            if(!quitPlayer.hasPermission(getConfig().getString("OfflinePlayer.permissions.permission"))) {
+                return;
+            }
+        }
+
         if (quitPlayer.getGameMode() == GameMode.CREATIVE && !getConfig().getBoolean("OfflinePlayer.spawnOnCreative")) {
             return;
         }

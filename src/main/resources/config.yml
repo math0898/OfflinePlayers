@@ -13,3 +13,10 @@ OfflinePlayer:
   de-spawnTimer:
     enabled: true
     timer: 20 #The time in seconds the clone is de-spawned after it is spawned.
+  worldBlacklist: #A list of worlds where the clones will not spawn.
+    - world1
+    - world2
+    - world3
+  permissions: #If enabled players will only get a clone if they have the permission.
+    enabled: false
+    permission: 'offlineplayer.clone'
