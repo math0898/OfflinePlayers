@@ -1,6 +1,8 @@
 name: OfflinePlayers
-version: 1.4
+version: 1.5
 author: snap20lp
 api-version: 1.13
-
 main: de.snap20lp.offlineplayers.OfflinePlayers
+
+softdepend:
+  - Citizens
