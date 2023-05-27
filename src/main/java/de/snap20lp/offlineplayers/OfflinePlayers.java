@@ -28,7 +28,7 @@ import java.util.*;
 @Getter
 public class OfflinePlayers extends JavaPlugin implements Listener {
 
-    private final double version = 1.6;
+    private final double version = 1.7;
     private boolean isCitizensEnabled = false;
     private final HashMap<UUID, OfflinePlayer> offlinePlayerList = new HashMap<>();
     private final HashMap<Integer, OfflinePlayer> entityOfflinePlayerHashMap = new HashMap<>();
@@ -61,7 +61,9 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
     @Override
     public void onDisable() {
         getOfflinePlayerList().values().forEach(OfflinePlayer::despawnClone);
-        inMemoryNPCRegistry.deregisterAll();
+        if(getServer().getPluginManager().getPlugin("Citizens") != null) {
+            inMemoryNPCRegistry.deregisterAll();
+        }
     }
 
     @EventHandler
@@ -134,15 +136,16 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
         if(getConfig().getStringList("OfflinePlayer.worldBlacklist").contains(quitPlayer.getWorld().getName())) {
             return;
         }
+        if(getConfig().getStringList("OfflinePlayer.gamemodeBlacklist").contains(quitPlayer.getGameMode().name())) {
+            return;
+        }
         if(getConfig().getBoolean("OfflinePlayer.permissions.enabled") && getConfig().getString("OfflinePlayer.permissions.permission") != null) {
             if(!quitPlayer.hasPermission(getConfig().getString("OfflinePlayer.permissions.permission"))) {
                 return;
             }
         }
 
-        if (quitPlayer.getGameMode() == GameMode.CREATIVE && !getConfig().getBoolean("OfflinePlayer.spawnOnCreative")) {
-            return;
-        }
+
         OfflinePlayer offlinePlayer = new OfflinePlayer(quitPlayer, new ArrayList<>(Arrays.asList(quitPlayer.getInventory().getContents())), quitPlayer.getEquipment() == null ? new ArrayList<>() : new ArrayList<>(Arrays.asList(quitPlayer.getInventory().getArmorContents())), quitPlayer.getEquipment().getItemInMainHand(), quitPlayer.getEquipment().getItemInOffHand());
         OfflinePlayerSpawnEvent offlinePlayerSpawnEvent = new OfflinePlayerSpawnEvent(offlinePlayer);
         Bukkit.getPluginManager().callEvent(offlinePlayerSpawnEvent);

@@ -5,7 +5,9 @@
 OfflinePlayer:
   cloneEntity: ZOMBIE #The entity type of the clone. You can find a list of all entity types here: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/entity/EntityType.html
   #If you want to use the entity type of PLAYER you need to install the Citizens plugin and set the cloneEntity to PLAYER.
-  spawnOnCreative: false #If true the clone will spawn when the player is in creative mode.
+  gamemodeBlacklist: #A list of gamemodes where the clones will not spawn.
+    - CREATIVE
+    - SPECTATOR
   isHittable: true #If the clone is damageable.
   hasAI: true #If true the clone is able to be fall down, pushed or knocked back.
   nameAlwaysVisible: true #If false the name of the clone is only visible if you hover on it.
