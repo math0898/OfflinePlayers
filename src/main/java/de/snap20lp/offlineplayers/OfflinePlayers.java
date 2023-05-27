@@ -5,9 +5,6 @@ import de.snap20lp.offlineplayers.events.OfflinePlayerDespawnEvent;
 import de.snap20lp.offlineplayers.events.OfflinePlayerHitEvent;
 import de.snap20lp.offlineplayers.events.OfflinePlayerSpawnEvent;
 import lombok.Getter;
-import net.citizensnpcs.api.CitizensAPI;
-import net.citizensnpcs.api.npc.NPC;
-import net.citizensnpcs.api.npc.NPCRegistry;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -30,11 +27,9 @@ import java.util.UUID;
 @Getter
 public class OfflinePlayers extends JavaPlugin implements Listener {
 
-    private final double version = 1.8;
+    private final double version = 1.9;
     private final HashMap<UUID, OfflinePlayer> offlinePlayerList = new HashMap<>();
     private final HashMap<Integer, OfflinePlayer> entityOfflinePlayerHashMap = new HashMap<>();
-    private boolean isCitizensEnabled = false;
-    private Object inMemoryNPCRegistry;
 
     public static OfflinePlayers getInstance() {
         return getPlugin(OfflinePlayers.class);
@@ -43,18 +38,10 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         Bukkit.getConsoleSender().sendMessage("§aOfflinePlayers starting in version " + getVersion());
-        if (getServer().getPluginManager().getPlugin("Citizens") == null) {
-            Bukkit.getConsoleSender().sendMessage("§e[OfflinePlayers] WARNING: Citizens is not installed! EntityType PLAYER is not available!");
-        } else {
-            inMemoryNPCRegistry = CitizensAPI.createInMemoryNPCRegistry("OfflinePlayersRegistry");
-            isCitizensEnabled = true;
-
-            Bukkit.getOnlinePlayers().forEach(player -> {
-                NPC npc = ((NPCRegistry) OfflinePlayers.getInstance().getInMemoryNPCRegistry()).createNPC(EntityType.PLAYER, player.getName());
-                npc.spawn(player.getLocation());
-                npc.despawn();
-            });
-
+        if (getServer().getPluginManager().getPlugin("LibsDisguises") == null || getServer().getPluginManager().getPlugin("ProtocolLib") == null) {
+            Bukkit.getConsoleSender().sendMessage("§4[OfflinePlayers] ERROR: LibsDisguises is not activated! Please install LibsDisguises and ProtocolLib to use this plugin!");
+            Bukkit.getPluginManager().disablePlugin(this);
+            return;
         }
         this.saveDefaultConfig();
         try {
@@ -70,9 +57,8 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
-        getOfflinePlayerList().values().forEach(OfflinePlayer::despawnClone);
-        if (isCitizensEnabled) {
-            ((NPCRegistry) inMemoryNPCRegistry).deregisterAll();
+        if (getServer().getPluginManager().getPlugin("LibsDisguises") != null && getServer().getPluginManager().getPlugin("ProtocolLib") != null) {
+            getOfflinePlayerList().values().forEach(OfflinePlayer::despawnClone);
         }
     }
 
@@ -106,11 +92,6 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
 
     @EventHandler
     public void on(PlayerJoinEvent playerJoinEvent) {
-        if (isCitizensEnabled) {
-            NPC npc = ((NPCRegistry) OfflinePlayers.getInstance().getInMemoryNPCRegistry()).createNPC(EntityType.PLAYER, playerJoinEvent.getPlayer().getName());
-            npc.spawn(playerJoinEvent.getPlayer().getLocation());
-            npc.despawn();
-        }
         if (getOfflinePlayerList().containsKey(playerJoinEvent.getPlayer().getUniqueId())) {
 
             OfflinePlayer clone = getOfflinePlayerList().get(playerJoinEvent.getPlayer().getUniqueId());
