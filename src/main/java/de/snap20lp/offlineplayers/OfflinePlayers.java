@@ -6,9 +6,11 @@ import de.snap20lp.offlineplayers.events.OfflinePlayerHitEvent;
 import de.snap20lp.offlineplayers.events.OfflinePlayerSpawnEvent;
 import lombok.Getter;
 import org.bukkit.Bukkit;
+import org.bukkit.Effect;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -17,6 +19,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.ArrayList;
@@ -65,27 +68,32 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
     @EventHandler
     public void on(EntityResurrectEvent entityResurrectEvent) {
         if (getEntityOfflinePlayerHashMap().containsKey(entityResurrectEvent.getEntity().getEntityId())) {
+
             OfflinePlayer offlinePlayer = getEntityOfflinePlayerHashMap().get(entityResurrectEvent.getEntity().getEntityId());
-            if (offlinePlayer.getCloneEntity().getEquipment().getItemInOffHand().getType() != Material.TOTEM_OF_UNDYING || offlinePlayer.getOffHand().getType() != Material.TOTEM_OF_UNDYING) {
+            if(offlinePlayer.getMainHand().getType() != Material.TOTEM_OF_UNDYING && offlinePlayer.getOffHand().getType() != Material.TOTEM_OF_UNDYING) {
                 entityResurrectEvent.setCancelled(true);
                 return;
             }
-            ArrayList<ItemStack> savedInventoryContentsTemp = offlinePlayer.getSavedInventoryContents();
-            for (ItemStack itemStack : savedInventoryContentsTemp) {
-                if (itemStack != null && itemStack.getType() == Material.TOTEM_OF_UNDYING) {
-                    offlinePlayer.getSavedInventoryContents().remove(itemStack);
-                    break;
-                }
-            }
-            if (offlinePlayer.getCloneEntity().getEquipment().getItemInOffHand().getType() == Material.TOTEM_OF_UNDYING) {
-                offlinePlayer.getCloneEntity().getEquipment().setItemInOffHand(new ItemStack(Material.AIR));
-                offlinePlayer.getOffHand().setType(Material.AIR);
-                return;
-            }
-            if (offlinePlayer.getCloneEntity().getEquipment().getItemInMainHand().getType() == Material.TOTEM_OF_UNDYING) {
-                offlinePlayer.getCloneEntity().getEquipment().setItemInMainHand(new ItemStack(Material.AIR));
+
+            entityResurrectEvent.getEntity().getWorld().playSound(entityResurrectEvent.getEntity().getLocation(), Sound.ITEM_TOTEM_USE, 100, 1);
+
+            if(offlinePlayer.getMainHand().getType() == Material.TOTEM_OF_UNDYING)
                 offlinePlayer.getMainHand().setType(Material.AIR);
-            }
+            else if(offlinePlayer.getOffHand().getType() == Material.TOTEM_OF_UNDYING)
+                offlinePlayer.getOffHand().setType(Material.AIR);
+
+            OfflinePlayer newOfflinePlayer = new OfflinePlayer(offlinePlayer.getOfflinePlayer(), offlinePlayer.getCurrentSeconds(),offlinePlayer.getCloneEntity().getLocation(),offlinePlayer.getPlayerExp(),offlinePlayer.getCurrentHP(), offlinePlayer.getSavedInventoryContents(), offlinePlayer.getSavedArmorContents(), offlinePlayer.getMainHand(), offlinePlayer.getOffHand());
+
+
+            getOfflinePlayerList().remove(offlinePlayer.getOfflinePlayer().getUniqueId());
+            getEntityOfflinePlayerHashMap().remove(entityResurrectEvent.getEntity().getEntityId());
+            offlinePlayer.despawnClone();
+
+            getOfflinePlayerList().put(newOfflinePlayer.getOfflinePlayer().getUniqueId(), newOfflinePlayer);
+            getEntityOfflinePlayerHashMap().put(newOfflinePlayer.getCloneEntity().getEntityId(), newOfflinePlayer);
+
+
+
         }
     }
 
@@ -99,6 +107,9 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
             Bukkit.getPluginManager().callEvent(offlinePlayerDespawnEvent);
 
             playerJoinEvent.getPlayer().teleport(clone.getCloneEntity().getLocation());
+
+            playerJoinEvent.getPlayer().getActivePotionEffects().forEach(potionEffect -> playerJoinEvent.getPlayer().removePotionEffect(potionEffect.getType()));
+
             playerJoinEvent.getPlayer().addPotionEffects(clone.getCloneEntity().getActivePotionEffects());
 
             //Bug fix 1.2 | Thank you for the support :)
@@ -160,8 +171,11 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
 
     @EventHandler
     public void on(EntityTargetEvent entityTargetEvent) {
-        if (getEntityOfflinePlayerHashMap().containsKey(entityTargetEvent.getEntity().getEntityId())) {
+        if(entityTargetEvent.getTarget() == null)
+            return;
+        if (getEntityOfflinePlayerHashMap().containsKey(entityTargetEvent.getTarget().getEntityId())) {
             entityTargetEvent.setCancelled(true);
+            entityTargetEvent.setTarget(null);
         }
     }
 
@@ -199,7 +213,7 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
 
     @EventHandler
     public void on(EntityDamageByEntityEvent event) {
-        if (event.getEntity().getType() == EntityType.valueOf(OfflinePlayers.getInstance().getConfig().getString("OfflinePlayer.cloneEntity")) && getEntityOfflinePlayerHashMap().containsKey(event.getEntity().getEntityId()) && event.getDamager() instanceof Player damager) {
+        if (getEntityOfflinePlayerHashMap().containsKey(event.getEntity().getEntityId()) && event.getDamager() instanceof Player damager) {
             OfflinePlayer offlinePlayer = getEntityOfflinePlayerHashMap().get(event.getEntity().getEntityId());
             if (!offlinePlayer.isHittable()) {
                 event.setCancelled(true);

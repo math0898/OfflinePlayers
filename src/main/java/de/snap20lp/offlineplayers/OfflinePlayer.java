@@ -2,10 +2,12 @@ package de.snap20lp.offlineplayers;
 
 import lombok.Getter;
 import lombok.Setter;
+import me.libraryaddict.disguise.DisguiseAPI;
 import me.libraryaddict.disguise.disguisetypes.DisguiseType;
 import me.libraryaddict.disguise.disguisetypes.MobDisguise;
 import me.libraryaddict.disguise.disguisetypes.TargetedDisguise;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.*;
 import org.bukkit.event.Listener;
@@ -26,15 +28,18 @@ public class OfflinePlayer implements Listener {
     private final ItemStack offHand;
     private final int playerExp;
     private final String customName;
-    private final int despawnTimerSeconds = OfflinePlayers.getInstance().getConfig().getInt("OfflinePlayer.de-spawnTimer.timer");
-    private int currentSeconds = 0;
+    private Location spawnLocation;
     private int despawnTask = 0;
+    private int currentSeconds = 0;
+    private final int despawnTimerSeconds = OfflinePlayers.getInstance().getConfig().getInt("OfflinePlayer.de-spawnTimer.timer");
     @Setter
     private boolean isHittable = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.isHittable"), hasAI = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.hasAI"), isDead = false, hasGravity = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.hasGravity"), despawnTimerEnabled = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.de-spawnTimer.enabled");
     private LivingEntity cloneEntity;
+    private TargetedDisguise disguisedEntity;
 
     public OfflinePlayer(Player player, ArrayList<ItemStack> savedInventoryContents, ArrayList<ItemStack> savedArmorContents, ItemStack mainHand, ItemStack offHand) {
         this.offlinePlayer = player;
+        this.spawnLocation = player.getLocation();
         this.mainHand = mainHand;
         this.offHand = offHand;
         this.savedInventoryContents = savedInventoryContents;
@@ -45,9 +50,29 @@ public class OfflinePlayer implements Listener {
         customName = customName.replaceAll("%PLAYER_NAME", player.getName());
         customName = customName.replaceAll("%DESPAWN_TIMER%", String.valueOf(despawnTimerSeconds - currentSeconds));
         this.customName = customName;
-
         spawnClone();
+        startDespawnTimer();
+    }
 
+    public OfflinePlayer(org.bukkit.OfflinePlayer player,int currentSeconds,Location spawnLocation, int playerExp, double currentHP, ArrayList<ItemStack> savedInventoryContents, ArrayList<ItemStack> savedArmorContents, ItemStack mainHand, ItemStack offHand) {
+        this.offlinePlayer = player;
+        this.mainHand = mainHand;
+        this.spawnLocation = spawnLocation;
+        this.offHand = offHand;
+        this.savedInventoryContents = savedInventoryContents;
+        this.savedArmorContents = savedArmorContents;
+        this.playerExp = playerExp;
+        this.currentHP = currentHP;
+        this.currentSeconds = currentSeconds;
+        String customName = OfflinePlayers.getInstance().getConfig().getString("OfflinePlayer.name");
+        customName = customName.replaceAll("%PLAYER_NAME", player.getName());
+        customName = customName.replaceAll("%DESPAWN_TIMER%", String.valueOf(despawnTimerSeconds - currentSeconds));
+        this.customName = customName;
+        spawnClone();
+        startDespawnTimer();
+    }
+
+    private void startDespawnTimer() {
         if (despawnTimerEnabled) {
             despawnTask = Bukkit.getScheduler().scheduleSyncRepeatingTask(OfflinePlayers.getInstance(), new Runnable() {
                 @Override
@@ -60,14 +85,14 @@ public class OfflinePlayer implements Listener {
                     currentSeconds++;
                     if (cloneEntity.isValid()) {
                         String customName = OfflinePlayers.getInstance().getConfig().getString("OfflinePlayer.name");
-                        customName = customName.replaceAll("%PLAYER_NAME", player.getName());
+                        customName = customName.replaceAll("%PLAYER_NAME", offlinePlayer.getName());
                         customName = customName.replaceAll("%DESPAWN_TIMER%", String.valueOf(despawnTimerSeconds - currentSeconds));
                         cloneEntity.setCustomName(customName);
+                        disguisedEntity.getWatcher().setCustomName(customName);
                     }
                 }
             }, 20, 20);
         }
-
     }
 
     private void cancelDespawnTask() {
@@ -79,7 +104,7 @@ public class OfflinePlayer implements Listener {
         Entity clone;
         EntityType entityType = EntityType.valueOf(OfflinePlayers.getInstance().getConfig().getString("OfflinePlayer.cloneEntity"));
         try {
-            clone = offlinePlayer.getPlayer().getWorld().spawnEntity(offlinePlayer.getPlayer().getLocation(), EntityType.ZOMBIE);
+            clone = offlinePlayer.getPlayer().getWorld().spawnEntity(spawnLocation, EntityType.FOX);
         } catch (Exception e) {
             Bukkit.getConsoleSender().sendMessage("§4[OfflinePlayers] Could not spawn clone entity! Please check your config.yml! | Exception: " + e.getMessage());
             return;
@@ -90,7 +115,7 @@ public class OfflinePlayer implements Listener {
             if (clone instanceof Ageable)
                 ((Ageable) clone).setAdult();
             clone.setSilent(true);
-            ((LivingEntity) clone).setAI(false);
+
             if (hasAI) {
                 ((LivingEntity) clone).setAI(true);
                 ((LivingEntity) clone).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, Integer.MAX_VALUE, 255, false, false, false));
@@ -101,11 +126,13 @@ public class OfflinePlayer implements Listener {
             ((LivingEntity) clone).getEquipment().setArmorContents(savedArmorContents.toArray(new ItemStack[0]));
             ((LivingEntity) clone).getEquipment().setItemInMainHand(mainHand);
             ((LivingEntity) clone).getEquipment().setItemInOffHand(offHand);
+            offlinePlayer.getPlayer().getActivePotionEffects().forEach(potionEffect -> ((LivingEntity) clone).addPotionEffect(potionEffect));
             clone.setInvulnerable(!isHittable);
             clone.setCustomName(customName);
             this.cloneEntity = (LivingEntity) clone;
 
             TargetedDisguise targetedDisguise;
+
             if (entityType == EntityType.PLAYER) {
                 targetedDisguise = new me.libraryaddict.disguise.disguisetypes.PlayerDisguise(offlinePlayer.getPlayer().getName());
             } else {
@@ -118,6 +145,7 @@ public class OfflinePlayer implements Listener {
             targetedDisguise.getWatcher().setYawLock(offlinePlayer.getPlayer().getLocation().getYaw());
             targetedDisguise.getWatcher().setPitchLock(offlinePlayer.getPlayer().getLocation().getPitch());
             me.libraryaddict.disguise.DisguiseAPI.disguiseEntity(clone, targetedDisguise);
+            disguisedEntity = targetedDisguise;
         }
     }
 
