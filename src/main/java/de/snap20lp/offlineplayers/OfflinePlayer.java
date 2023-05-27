@@ -3,7 +3,7 @@ package de.snap20lp.offlineplayers;
 import lombok.Getter;
 import lombok.Setter;
 import net.citizensnpcs.api.npc.NPC;
-import net.citizensnpcs.trait.ArmorStandTrait;
+import net.citizensnpcs.api.npc.NPCRegistry;
 import net.citizensnpcs.trait.SkinTrait;
 import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
@@ -64,7 +64,7 @@ public class OfflinePlayer implements Listener {
                         String customName = OfflinePlayers.getInstance().getConfig().getString("OfflinePlayer.name");
                         customName = customName.replaceAll("%PLAYER_NAME", player.getName());
                         customName = customName.replaceAll("%DESPAWN_TIMER%", String.valueOf(despawnTimerSeconds - currentSeconds));
-                        if(isUsingNPC) {
+                        if (isUsingNPC) {
                             cloneNPCEntity.getEntity().setCustomName(customName);
                             cloneNPCEntity.setName(customName);
                         } else {
@@ -84,13 +84,13 @@ public class OfflinePlayer implements Listener {
 
     public void spawnClone() {
         Entity clone;
-        if(OfflinePlayers.getInstance().getConfig().getString("OfflinePlayer.cloneEntity").equals("PLAYER")) {
-            if(!OfflinePlayers.getInstance().isCitizensEnabled()) {
+        if (OfflinePlayers.getInstance().getConfig().getString("OfflinePlayer.cloneEntity").equals("PLAYER")) {
+            if (!OfflinePlayers.getInstance().isCitizensEnabled()) {
                 Bukkit.getConsoleSender().sendMessage("§4[OfflinePlayers] Citizens is not enabled! You can't use PLAYER as clone entity!");
                 return;
             }
             isUsingNPC = true;
-            NPC npc = OfflinePlayers.getInstance().getInMemoryNPCRegistry().createNPC(EntityType.PLAYER,customName);
+            NPC npc = ((NPCRegistry) OfflinePlayers.getInstance().getInMemoryNPCRegistry()).createNPC(EntityType.PLAYER, customName);
             npc.getOrAddTrait(SkinTrait.class).setSkinName(offlinePlayer.getName());
             npc.setProtected(false);
             npc.spawn(offlinePlayer.getPlayer().getLocation());
@@ -130,7 +130,7 @@ public class OfflinePlayer implements Listener {
 
     public void despawnClone() {
         if (cloneEntity != null) {
-            if(isUsingNPC)
+            if (isUsingNPC)
                 cloneNPCEntity.despawn();
             else
                 cloneEntity.remove();

@@ -17,6 +17,7 @@ repositories {
     maven { url = 'https://oss.sonatype.org/content/repositories/snapshots' }
     maven { url = 'https://oss.sonatype.org/content/repositories/central' }
     mavenCentral()
+
 }
 
 dependencies {
@@ -25,6 +26,8 @@ dependencies {
     implementation files("C:/Users/Furkan/Documents/Citizens-2.0.31-b3023.jar")
     implementation "net.citizensnpcs:citizensapi:2.0.31-SNAPSHOT"
     implementation "net.citizensnpcs:citizens-parent:2.0.31-SNAPSHOT"
+
+
 }
 
 test {

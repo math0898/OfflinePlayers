@@ -9,7 +9,6 @@ import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.npc.NPCRegistry;
 import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.EntityType;
@@ -23,16 +22,20 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffectType;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.UUID;
 
 @Getter
 public class OfflinePlayers extends JavaPlugin implements Listener {
 
-    private final double version = 1.7;
-    private boolean isCitizensEnabled = false;
+    private final double version = 1.8;
     private final HashMap<UUID, OfflinePlayer> offlinePlayerList = new HashMap<>();
     private final HashMap<Integer, OfflinePlayer> entityOfflinePlayerHashMap = new HashMap<>();
-    private NPCRegistry inMemoryNPCRegistry;
+    private boolean isCitizensEnabled = false;
+    private Object inMemoryNPCRegistry;
+
     public static OfflinePlayers getInstance() {
         return getPlugin(OfflinePlayers.class);
     }
@@ -40,11 +43,18 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         Bukkit.getConsoleSender().sendMessage("§aOfflinePlayers starting in version " + getVersion());
-        if(getServer().getPluginManager().getPlugin("Citizens") == null) {
+        if (getServer().getPluginManager().getPlugin("Citizens") == null) {
             Bukkit.getConsoleSender().sendMessage("§e[OfflinePlayers] WARNING: Citizens is not installed! EntityType PLAYER is not available!");
         } else {
             inMemoryNPCRegistry = CitizensAPI.createInMemoryNPCRegistry("OfflinePlayersRegistry");
             isCitizensEnabled = true;
+
+            Bukkit.getOnlinePlayers().forEach(player -> {
+                NPC npc = ((NPCRegistry) OfflinePlayers.getInstance().getInMemoryNPCRegistry()).createNPC(EntityType.PLAYER, player.getName());
+                npc.spawn(player.getLocation());
+                npc.despawn();
+            });
+
         }
         this.saveDefaultConfig();
         try {
@@ -61,8 +71,8 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
     @Override
     public void onDisable() {
         getOfflinePlayerList().values().forEach(OfflinePlayer::despawnClone);
-        if(getServer().getPluginManager().getPlugin("Citizens") != null) {
-            inMemoryNPCRegistry.deregisterAll();
+        if (isCitizensEnabled) {
+            ((NPCRegistry) inMemoryNPCRegistry).deregisterAll();
         }
     }
 
@@ -74,7 +84,7 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
                 entityResurrectEvent.setCancelled(true);
                 return;
             }
-                ArrayList<ItemStack> savedInventoryContentsTemp = offlinePlayer.getSavedInventoryContents();
+            ArrayList<ItemStack> savedInventoryContentsTemp = offlinePlayer.getSavedInventoryContents();
             for (ItemStack itemStack : savedInventoryContentsTemp) {
                 if (itemStack != null && itemStack.getType() == Material.TOTEM_OF_UNDYING) {
                     offlinePlayer.getSavedInventoryContents().remove(itemStack);
@@ -96,9 +106,11 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
 
     @EventHandler
     public void on(PlayerJoinEvent playerJoinEvent) {
-        NPC npc = OfflinePlayers.getInstance().getInMemoryNPCRegistry().createNPC(EntityType.PLAYER,playerJoinEvent.getPlayer().getName());
-        npc.spawn(playerJoinEvent.getPlayer().getLocation());
-        npc.despawn();
+        if (isCitizensEnabled) {
+            NPC npc = ((NPCRegistry) OfflinePlayers.getInstance().getInMemoryNPCRegistry()).createNPC(EntityType.PLAYER, playerJoinEvent.getPlayer().getName());
+            npc.spawn(playerJoinEvent.getPlayer().getLocation());
+            npc.despawn();
+        }
         if (getOfflinePlayerList().containsKey(playerJoinEvent.getPlayer().getUniqueId())) {
 
             OfflinePlayer clone = getOfflinePlayerList().get(playerJoinEvent.getPlayer().getUniqueId());
@@ -127,20 +139,22 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
                 playerJoinEvent.getPlayer().setHealth(clone.getCloneEntity().getHealth());
             }
             clone.despawnClone();
+            getOfflinePlayerList().remove(playerJoinEvent.getPlayer().getUniqueId());
         }
     }
 
     @EventHandler
     public void on(PlayerQuitEvent playerQuitEvent) {
         Player quitPlayer = playerQuitEvent.getPlayer();
-        if(getConfig().getStringList("OfflinePlayer.worldBlacklist").contains(quitPlayer.getWorld().getName())) {
+
+        if (getConfig().getStringList("OfflinePlayer.worldBlacklist").contains(quitPlayer.getWorld().getName())) {
             return;
         }
-        if(getConfig().getStringList("OfflinePlayer.gamemodeBlacklist").contains(quitPlayer.getGameMode().name())) {
+        if (getConfig().getStringList("OfflinePlayer.gamemodeBlacklist").contains(quitPlayer.getGameMode().name())) {
             return;
         }
-        if(getConfig().getBoolean("OfflinePlayer.permissions.enabled") && getConfig().getString("OfflinePlayer.permissions.permission") != null) {
-            if(!quitPlayer.hasPermission(getConfig().getString("OfflinePlayer.permissions.permission"))) {
+        if (getConfig().getBoolean("OfflinePlayer.permissions.enabled") && getConfig().getString("OfflinePlayer.permissions.permission") != null) {
+            if (!quitPlayer.hasPermission(getConfig().getString("OfflinePlayer.permissions.permission"))) {
                 return;
             }
         }
