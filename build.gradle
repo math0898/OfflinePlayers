@@ -23,9 +23,10 @@ repositories {
 
 dependencies {
     implementation 'org.spigotmc:spigot-api:1.18.2-R0.1-SNAPSHOT'
-    implementation 'org.projectlombok:lombok:1.18.24'
+    implementation 'org.projectlombok:lombok:1.18.28'
     implementation 'LibsDisguises:LibsDisguises:10.0.34'
     implementation 'com.comphenix.protocol:ProtocolLib:5.0.0'
+    implementation 'com.google.code.gson:gson:2.10.1'
 }
 
 test {

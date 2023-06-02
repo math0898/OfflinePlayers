@@ -4,15 +4,19 @@
 
 OfflinePlayer:
   cloneEntity: PLAYER #The entity type of the clone. You can find a list of all entity types here: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/entity/EntityType.html
-  gamemodeBlacklist: #A list of gamemodes where the clones will not spawn.
-    - CREATIVE
-    - SPECTATOR
-  isHittable: true #If the clone is damageable.
-  hasAI: true #If true the clone is able to be fall down, pushed or knocked back.
-  name: "§8§lOffline §7- §c%PLAYER_NAME §e%DESPAWN_TIMER%" #The name of the clone. %PLAYER_NAME will be replaced with the name of the player. %DESPAWN_TIMER% will be replaced with the time until the clone despawns.
-  de-spawnTimer:
+  cloneRawEntity: FOX #The raw entity type that will be used to create an undisguised clone. This entity will be disguised with the cloneEntity.
+  cloneSpawnDistance: 50 #The range in blocks a player has to be in to show a clone.
+  cloneUpdateTimer: 15 #The value in ticks that defines in which interval the clone's visible state is updated. (20 ticks = 1 second)
+  cloneItemPickup: true #If true the clones will be able to pick up items.
+  cloneIsHittable: true #If the clone is damageable.
+  cloneHasAI: true #If true the clone is able to be fall down, pushed or knocked back.
+  cloneName: "§8§lOffline §7- §c%PLAYER_NAME §e%DESPAWN_TIMER%" #The name of the clone. %PLAYER_NAME will be replaced with the name of the player. %DESPAWN_TIMER% will be replaced with the time until the clone despawns.
+  cloneDe-spawnTimer:
     enabled: true
     timer: 20 #The time in seconds the clone is de-spawned after it is spawned.
+  game-modeBlacklist: #A list of gamemodes where the clones will not spawn.
+    - CREATIVE
+    - SPECTATOR
   worldBlacklist: #A list of worlds where the clones will not spawn.
     - world1
     - world2
