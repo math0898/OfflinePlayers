@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to help OfflinePlayers improve
+about: Report a bug to help OfflinePlayers improve
 title: "[Bug]"
 labels: bug
 assignees: derfurkan
