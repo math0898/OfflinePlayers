@@ -2,6 +2,7 @@ package de.snap20lp.offlineplayers;
 
 import lombok.Getter;
 import lombok.Setter;
+import me.libraryaddict.disguise.DisguiseAPI;
 import me.libraryaddict.disguise.disguisetypes.DisguiseType;
 import me.libraryaddict.disguise.disguisetypes.MobDisguise;
 import me.libraryaddict.disguise.disguisetypes.TargetedDisguise;
@@ -31,7 +32,7 @@ public class OfflinePlayer implements Listener {
     private final String customName;
     private final int despawnTimerSeconds = OfflinePlayers.getInstance().getConfig().getInt("OfflinePlayer.cloneDe-spawnTimer.timer");
     @Setter
-    private final Location spawnLocation;
+    private Location spawnLocation;
     private int despawnTask = 0, updateTask = 0;
     private int currentSeconds = 0;
     @Setter
@@ -138,11 +139,22 @@ public class OfflinePlayer implements Listener {
         Bukkit.getScheduler().cancelTask(updateTask);
     }
 
+    public void replaceCloneStats(LivingEntity entity) {
+        cloneEntity.teleport(entity.getLocation());
+        cloneEntity.setHealth(entity.getHealth());
+        cloneEntity.setFireTicks(entity.getFireTicks());
+        cloneEntity.setFallDistance(entity.getFallDistance());
+        cloneEntity.setVelocity(entity.getVelocity());
+        cloneEntity.setArrowsInBody(entity.getArrowsInBody());
+        cloneEntity.setFreezeTicks(entity.getFreezeTicks());
+        cloneEntity.setVisualFire(entity.isVisualFire());
+    }
+
     public void spawnClone() {
         Entity clone;
         EntityType entityType = EntityType.valueOf(OfflinePlayers.getInstance().getConfig().getString("OfflinePlayer.cloneEntity"));
         try {
-            clone = offlinePlayer.getPlayer().getWorld().spawnEntity(spawnLocation, EntityType.valueOf(OfflinePlayers.getInstance().getConfig().getString("OfflinePlayer.cloneRawEntity")));
+            clone = offlinePlayer.getPlayer().getWorld().spawnEntity(cloneEntity != null ? cloneEntity.getLocation() : spawnLocation, EntityType.valueOf(OfflinePlayers.getInstance().getConfig().getString("OfflinePlayer.cloneRawEntity")));
         } catch (Exception e) {
             Bukkit.getConsoleSender().sendMessage("§4[OfflinePlayers] Could not spawn clone entity! Please check your config.yml! | Exception: " + e.getMessage());
             return;
@@ -159,11 +171,11 @@ public class OfflinePlayer implements Listener {
                 ((LivingEntity) clone).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, Integer.MAX_VALUE, 255, false, false, false));
             }
             clone.setGravity(true);
-            ((LivingEntity) clone).getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(currentHP);
-            ((LivingEntity) clone).setHealth(currentHP);
-            ((LivingEntity) clone).getEquipment().setArmorContents(savedArmorContents.toArray(new ItemStack[0]));
-            ((LivingEntity) clone).getEquipment().setItemInMainHand(mainHand);
-            ((LivingEntity) clone).getEquipment().setItemInOffHand(offHand);
+            ((LivingEntity) clone).getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(cloneEntity == null ? currentHP : cloneEntity.getHealth());
+            ((LivingEntity) clone).setHealth(cloneEntity == null ? currentHP : cloneEntity.getHealth());
+            ((LivingEntity) clone).getEquipment().setArmorContents(cloneEntity == null ? savedArmorContents.toArray(new ItemStack[0]) : cloneEntity.getEquipment().getArmorContents());
+            ((LivingEntity) clone).getEquipment().setItemInMainHand(cloneEntity == null ? mainHand: cloneEntity.getEquipment().getItemInMainHand());
+            ((LivingEntity) clone).getEquipment().setItemInOffHand(cloneEntity == null ? offHand : cloneEntity.getEquipment().getItemInOffHand());
             offlinePlayer.getPlayer().getActivePotionEffects().forEach(potionEffect -> ((LivingEntity) clone).addPotionEffect(potionEffect));
             clone.setInvulnerable(!cloneIsHittable);
             clone.setCustomName(customName);

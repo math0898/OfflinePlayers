@@ -5,10 +5,12 @@ import de.snap20lp.offlineplayers.events.OfflinePlayerDespawnEvent;
 import de.snap20lp.offlineplayers.events.OfflinePlayerHitEvent;
 import de.snap20lp.offlineplayers.events.OfflinePlayerSpawnEvent;
 import lombok.Getter;
+import me.libraryaddict.disguise.events.UndisguiseEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -24,12 +26,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
 
 @Getter
 public class OfflinePlayers extends JavaPlugin implements Listener {
 
-    private final double version = 2.2;
+    private final double version = 2.3;
     private final HashMap<UUID, OfflinePlayer> offlinePlayerList = new HashMap<>();
     private final HashMap<Integer, OfflinePlayer> entityOfflinePlayerHashMap = new HashMap<>();
 
@@ -99,6 +100,8 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
     }
 
 
+
+
     @EventHandler
     public void on(PlayerJoinEvent playerJoinEvent) {
 
@@ -107,6 +110,10 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
                 return;
             }
             OfflinePlayer clone = getOfflinePlayerList().get(playerJoinEvent.getPlayer().getUniqueId());
+
+            clone.despawnClone();
+            clone.spawnClone();
+
             OfflinePlayerDespawnEvent offlinePlayerDespawnEvent = new OfflinePlayerDespawnEvent(clone);
             Bukkit.getPluginManager().callEvent(offlinePlayerDespawnEvent);
             playerJoinEvent.getPlayer().teleport(clone.getCloneEntity().getLocation());
@@ -134,6 +141,7 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
                     }
                 });
                 }
+
             clone.despawnClone();
 
             getOfflinePlayerList().remove(playerJoinEvent.getPlayer().getUniqueId());
@@ -162,6 +170,14 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().callEvent(offlinePlayerSpawnEvent);
         getOfflinePlayerList().put(quitPlayer.getUniqueId(), offlinePlayer);
         getEntityOfflinePlayerHashMap().put(offlinePlayer.getCloneEntity().getEntityId(), offlinePlayer);
+    }
+
+    @EventHandler
+    public void on(UndisguiseEvent undisguiseEvent) {
+        if(getEntityOfflinePlayerHashMap().containsKey(undisguiseEvent.getEntity().getEntityId())){
+            OfflinePlayer offlinePlayer = getEntityOfflinePlayerHashMap().get(undisguiseEvent.getEntity().getEntityId());
+            offlinePlayer.replaceCloneStats((LivingEntity) undisguiseEvent.getEntity());
+        }
     }
 
     @EventHandler
