@@ -12,6 +12,7 @@ OfflinePlayer:
   cloneSpawnDistance: 50 #The range in blocks a player has to be in to show a clone.
   cloneUpdateTimer: 15 #The value in ticks that defines in which interval the clone's visible state is updated. (20 ticks = 1 second)
   cloneItemPickup: true #If true the clones will be able to pick up items.
+  cloneKeepItems: false #If true the clone will keep his items after he died.
   cloneIsHittable: true #If the clone is damageable.
   cloneHasAI: true #If true the clone is able to be fall down, pushed or knocked back.
   cloneCanProvoke: true #If true the clone can be targeted by mobs.

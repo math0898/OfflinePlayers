@@ -33,16 +33,18 @@ import java.util.UUID;
 @Getter
 public class OfflinePlayers extends JavaPlugin implements Listener {
 
-    private final double version = 2.6;
+    private final double version = 2.7;
     private final HashMap<UUID, OfflinePlayer> offlinePlayerList = new HashMap<>();
     private final HashMap<Integer, OfflinePlayer> entityOfflinePlayerHashMap = new HashMap<>();
-
+    Metrics metrics;
     public static OfflinePlayers getInstance() {
         return getPlugin(OfflinePlayers.class);
     }
 
     @Override
     public void onEnable() {
+        this.metrics = new Metrics(this, 19973);
+
         Bukkit.getConsoleSender().sendMessage("§aOfflinePlayers starting in version " + getVersion());
         if (getServer().getPluginManager().getPlugin("LibsDisguises") == null || getServer().getPluginManager().getPlugin("ProtocolLib") == null) {
             Bukkit.getConsoleSender().sendMessage("§4[OfflinePlayers] ERROR: LibsDisguises is not activated! Please install LibsDisguises and ProtocolLib to use this plugin!");
@@ -75,6 +77,8 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
+        this.metrics.shutdown();
+
         if (getServer().getPluginManager().getPlugin("LibsDisguises") != null && getServer().getPluginManager().getPlugin("ProtocolLib") != null) {
             getOfflinePlayerList().values().forEach(OfflinePlayer::despawnClone);
         }
@@ -138,8 +142,10 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
                 playerJoinEvent.getPlayer().removePotionEffect(PotionEffectType.SLOW);
             }
             if (clone.isDead()) {
-                if (playerJoinEvent.getPlayer().getEquipment() != null) {
-                    playerJoinEvent.getPlayer().getEquipment().clear();
+                if (!getConfig().getBoolean("OfflinePlayer.cloneKeepItems")) {
+                    if (playerJoinEvent.getPlayer().getEquipment() != null) {
+                        playerJoinEvent.getPlayer().getEquipment().clear();
+                    }
                 }
                 playerJoinEvent.getPlayer().setLevel(0);
                 playerJoinEvent.getPlayer().setExp(0.0f);
@@ -249,6 +255,8 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
 
             event.getDrops().clear();
 
+            if (!getConfig().getBoolean("OfflinePlayer.cloneKeepItems")) {
+
             for (ItemStack inventoryContent : offlinePlayer.getSavedInventoryContents()) {
                 if (inventoryContent != null) {
                     event.getDrops().add(inventoryContent);
@@ -260,6 +268,8 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
                     event.getDrops().add(itemStack);
                 }
             });
+
+            }
 
             event.setDroppedExp(offlinePlayer.getPlayerExp());
             offlinePlayer.setHidden(true);
