@@ -9,6 +9,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -65,11 +66,15 @@ public class CloneManager implements Listener { // todo: Perhaps refactor events
             int playerXp = save.getInt(s + ".player-xp", 0);
             double currentHP = save.getDouble(s + ".hp", 0);
             ArrayList<ItemStack> inventory = new ArrayList<>();
-            for (String i : save.getConfigurationSection(s + ".inventory").getKeys(false))
-                inventory.add(save.getItemStack(s + ".inventory." + i, new ItemStack(Material.AIR, 1)));
+            ConfigurationSection section = save.getConfigurationSection(s + ".inventory");
+            if (section != null)
+                for (String i : section.getKeys(false))
+                    inventory.add(save.getItemStack(s + ".inventory." + i, new ItemStack(Material.AIR, 1)));
             ArrayList<ItemStack> armor = new ArrayList<>();
-            for (String i : save.getConfigurationSection(s + ".armor").getKeys(false))
-                armor.add(save.getItemStack(s + ".armor." + i, new ItemStack(Material.AIR, 1)));
+            section = save.getConfigurationSection(s + ".armor");
+            if (section != null)
+                for (String i : save.getConfigurationSection(s + ".armor").getKeys(false))
+                    armor.add(save.getItemStack(s + ".armor." + i, new ItemStack(Material.AIR, 1)));
             ItemStack mainHand = save.getItemStack(s + ".main-hand", new ItemStack(Material.AIR, 1));
             ItemStack offHand = save.getItemStack(s + ".off-hand", new ItemStack(Material.AIR, 1));
             OfflinePlayer player = new OfflinePlayer(Bukkit.getOfflinePlayer(uuid), currentSeconds, location, playerXp, currentHP, inventory, armor, mainHand, offHand);
@@ -104,18 +109,23 @@ public class CloneManager implements Listener { // todo: Perhaps refactor events
         for (UUID s : getOfflinePlayerList().keySet()) {
             String uuid = s.toString();
             OfflinePlayer player = getOfflinePlayerList().get(s);
-            save.set(s + ".current-seconds", player.getCurrentSeconds());
-            save.set(s + ".location", player.getCloneEntity().getLocation());
-            save.set(s + ".player-xp", player.getPlayerExp());
-            save.set(s + ".hp", player.getCurrentHP());
+            save.set(uuid + ".current-seconds", player.getCurrentSeconds());
+            save.set(uuid + ".location", player.getCloneEntity().getLocation());
+            save.set(uuid + ".player-xp", player.getPlayerExp());
+            save.set(uuid + ".hp", player.getCurrentHP());
             ArrayList<ItemStack> inventory = player.getSavedInventoryContents();
             for (ItemStack i : inventory)
-                save.set(s + ".inventory." + inventory.indexOf(i), i);
+                save.set(uuid + ".inventory." + inventory.indexOf(i), i);
             ArrayList<ItemStack> armor = player.getSavedArmorContents();
             for (ItemStack i : armor)
-                save.set(i + ".armor." + armor.indexOf(i), i);
-            save.set(s + ".main-hand", player.getMainHand());
-            save.set(s + ".off-hand", player.getOffHand());
+                save.set(uuid + ".armor." + armor.indexOf(i), i);
+            save.set(uuid + ".main-hand", player.getMainHand());
+            save.set(uuid + ".off-hand", player.getOffHand());
+        }
+        try {
+            save.save("./plugins/OfflinePlayers/clones.yml");
+        } catch (IOException ioException) {
+            OfflinePlayers.getInstance().getLogger().log(Level.WARNING, "Failed to save clone data:" + ioException.getMessage());
         }
     }
 

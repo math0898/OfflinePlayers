@@ -4,10 +4,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.EntityType;
-import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public class OfflinePlayers extends JavaPlugin implements Listener { // todo: Maybe create a config manager. Perhaps even enum options with default values.
+public class OfflinePlayers extends JavaPlugin { // todo: Maybe create a config manager. Perhaps even enum options with default values.
 
     private final double version = 3.0;
 
@@ -21,6 +20,7 @@ public class OfflinePlayers extends JavaPlugin implements Listener { // todo: Ma
         this.metrics = new Metrics(this, 19973);
 
         Bukkit.getConsoleSender().sendMessage("§aOfflinePlayers starting in version " + version);
+        Bukkit.getPluginManager().registerEvents(CloneManager.getInstance(), this);
         if (getServer().getPluginManager().getPlugin("LibsDisguises") == null || getServer().getPluginManager().getPlugin("ProtocolLib") == null) {
             Bukkit.getConsoleSender().sendMessage("§4[OfflinePlayers] ERROR: LibsDisguises is not activated! Please install LibsDisguises and ProtocolLib to use this plugin!");
             Bukkit.getPluginManager().disablePlugin(this);
@@ -47,8 +47,6 @@ public class OfflinePlayers extends JavaPlugin implements Listener { // todo: Ma
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
-        CloneManager.getInstance();
-        Bukkit.getPluginManager().registerEvents(this, this);
     }
 
     @Override

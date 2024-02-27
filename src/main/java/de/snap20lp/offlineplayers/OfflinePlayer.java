@@ -1,5 +1,6 @@
 package de.snap20lp.offlineplayers;
 
+import com.comphenix.protocol.wrappers.WrappedGameProfile;
 import me.libraryaddict.disguise.DisguiseAPI;
 import me.libraryaddict.disguise.disguisetypes.DisguiseType;
 import me.libraryaddict.disguise.disguisetypes.MiscDisguise;
@@ -267,7 +268,7 @@ public class OfflinePlayer implements Listener {
         Entity clone;
         EntityType entityType;
         try {
-            clone = offlinePlayer.getPlayer().getWorld().spawnEntity(cloneEntity != null ? cloneEntity.getLocation() : spawnLocation, EntityType.valueOf(OfflinePlayers.getInstance().getConfig().getString("OfflinePlayer.cloneRawEntity")));
+            clone = spawnLocation.getWorld().spawnEntity(cloneEntity != null ? cloneEntity.getLocation() : spawnLocation, EntityType.valueOf(OfflinePlayers.getInstance().getConfig().getString("OfflinePlayer.cloneRawEntity")));
         } catch (Exception e) {
             Bukkit.getConsoleSender().sendMessage("§4[OfflinePlayers] Could not spawn clone entity! Please check your config.yml! | Exception: " + e.getMessage());
             return;
@@ -289,7 +290,8 @@ public class OfflinePlayer implements Listener {
             ((LivingEntity) clone).getEquipment().setArmorContents(cloneEntity == null ? savedArmorContents.toArray(new ItemStack[0]) : cloneEntity.getEquipment().getArmorContents());
             ((LivingEntity) clone).getEquipment().setItemInMainHand(cloneEntity == null ? mainHand: cloneEntity.getEquipment().getItemInMainHand());
             ((LivingEntity) clone).getEquipment().setItemInOffHand(cloneEntity == null ? offHand : cloneEntity.getEquipment().getItemInOffHand());
-            offlinePlayer.getPlayer().getActivePotionEffects().forEach(potionEffect -> ((LivingEntity) clone).addPotionEffect(potionEffect));
+            org.bukkit.entity.Player player = offlinePlayer.getPlayer();
+            if (player != null) player.getActivePotionEffects().forEach(potionEffect -> ((LivingEntity) clone).addPotionEffect(potionEffect));
             clone.setInvulnerable(!cloneIsHittable);
             clone.setCustomName(customName);
             this.cloneEntity = (LivingEntity) clone;
@@ -301,7 +303,8 @@ public class OfflinePlayer implements Listener {
             } else {
                 entityType = EntityType.valueOf(OfflinePlayers.getInstance().getConfig().getString("OfflinePlayer.cloneEntity"));
                 if (entityType == EntityType.PLAYER) {
-                    targetedDisguise = new me.libraryaddict.disguise.disguisetypes.PlayerDisguise(offlinePlayer.getPlayer().getName());
+                    if (player == null) targetedDisguise = new me.libraryaddict.disguise.disguisetypes.PlayerDisguise(WrappedGameProfile.fromOfflinePlayer(offlinePlayer), WrappedGameProfile.fromOfflinePlayer(offlinePlayer));
+                    else targetedDisguise = new me.libraryaddict.disguise.disguisetypes.PlayerDisguise(player.getName());
                 } else {
                     targetedDisguise = new MobDisguise(DisguiseType.getType(entityType));
                 }
@@ -312,8 +315,8 @@ public class OfflinePlayer implements Listener {
             targetedDisguise.getWatcher().setCustomName(customName);
             targetedDisguise.getWatcher().setYawLocked(true);
             targetedDisguise.getWatcher().setPitchLocked(true);
-            targetedDisguise.getWatcher().setYawLock(offlinePlayer.getPlayer().getLocation().getYaw());
-            targetedDisguise.getWatcher().setPitchLock(offlinePlayer.getPlayer().getLocation().getPitch());
+            targetedDisguise.getWatcher().setYawLock(spawnLocation.getYaw());
+            targetedDisguise.getWatcher().setPitchLock(spawnLocation.getPitch());
             me.libraryaddict.disguise.DisguiseAPI.disguiseToAll(clone, targetedDisguise);
             disguisedEntity = targetedDisguise;
         }
