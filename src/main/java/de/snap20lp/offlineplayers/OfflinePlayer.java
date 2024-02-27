@@ -1,7 +1,6 @@
 package de.snap20lp.offlineplayers;
 
 import me.libraryaddict.disguise.DisguiseAPI;
-import me.libraryaddict.disguise.LibsDisguises;
 import me.libraryaddict.disguise.disguisetypes.DisguiseType;
 import me.libraryaddict.disguise.disguisetypes.MiscDisguise;
 import me.libraryaddict.disguise.disguisetypes.MobDisguise;
@@ -17,6 +16,8 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class OfflinePlayer implements Listener {
@@ -200,13 +201,15 @@ public class OfflinePlayer implements Listener {
                       DisguiseAPI.undisguiseToAll(cloneEntity);
                       cloneEntity.remove();
                       despawnClone();
-                      OfflinePlayers.getInstance().getOfflinePlayerList().remove(offlinePlayer.getUniqueId());
-                      OfflinePlayers.getInstance().getEntityOfflinePlayerHashMap().remove(cloneEntity.getEntityId());
+                      Map<UUID, OfflinePlayer> offlinePlayerList = CloneManager.getInstance().getOfflinePlayerList();
+                      Map<Integer, OfflinePlayer> entityList = CloneManager.getInstance().getEntityOfflinePlayerHashMap();
+                      offlinePlayerList.remove(offlinePlayer.getUniqueId());
+                      entityList.remove(cloneEntity.getEntityId());
                       cancelUpdateTask();
                       cancelDespawnTask();
 
-                      OfflinePlayers.getInstance().getOfflinePlayerList().put(offlinePlayer.getUniqueId(),offlinePlayerClone);
-                      OfflinePlayers.getInstance().getEntityOfflinePlayerHashMap().put(offlinePlayerClone.getDisguisedEntity().getEntity().getEntityId(), offlinePlayerClone);
+                      offlinePlayerList.put(offlinePlayer.getUniqueId(),offlinePlayerClone);
+                      entityList.put(offlinePlayerClone.getDisguisedEntity().getEntity().getEntityId(), offlinePlayerClone);
                   }
 
                   if (isNearby.get() && isHidden) {
