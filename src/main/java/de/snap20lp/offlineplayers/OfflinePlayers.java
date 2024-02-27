@@ -47,12 +47,14 @@ public class OfflinePlayers extends JavaPlugin implements Listener { // todo: Ma
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
+        CloneManager.getInstance();
         Bukkit.getPluginManager().registerEvents(this, this);
     }
 
     @Override
     public void onDisable() {
         this.metrics.shutdown();
+        CloneManager.getInstance().save();
         if (getServer().getPluginManager().getPlugin("LibsDisguises") != null && getServer().getPluginManager().getPlugin("ProtocolLib") != null)
             CloneManager.getInstance().getOfflinePlayerList().forEach(((uuid, offlinePlayer) -> offlinePlayer.despawnClone())); // todo: Consider having CloneManager handle.
     }

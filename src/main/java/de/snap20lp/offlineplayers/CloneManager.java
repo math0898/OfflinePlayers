@@ -6,9 +6,12 @@ import de.snap20lp.offlineplayers.events.OfflinePlayerHitEvent;
 import de.snap20lp.offlineplayers.events.OfflinePlayerSpawnEvent;
 import me.libraryaddict.disguise.events.UndisguiseEvent;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -21,10 +24,12 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffectType;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.UUID;
+import java.util.logging.Level;
 
 /**
  * The CloneManager manages creating, saving, loading, and removing clones. Follows the singleton instance model.
@@ -45,8 +50,32 @@ public class CloneManager implements Listener { // todo: Perhaps refactor events
     /**
      * Creates a new CloneManager by loading, if present, persistent clones from the drive.
      */
-    public CloneManager () {
-        // todo: Implement loading.
+    public CloneManager () { // todo: Might be cleaner to use a custom constructor.
+        FileConfiguration save = new YamlConfiguration();
+        try {
+            save.load("./plugins/OfflinePlayers/clones.yml");
+        } catch (IOException | InvalidConfigurationException exception) {
+            OfflinePlayers.getInstance().getLogger().log(Level.WARNING, "Failed to load clones from disk. Hopefully first run: " + exception.getMessage());
+            return;
+        }
+        for (String s : save.getKeys(false)) {
+            UUID uuid = UUID.fromString(s);
+            int currentSeconds = save.getInt(s + ".current-seconds", 0);
+            Location location = save.getLocation(s + ".location", new Location(null, 0, 0,0));
+            int playerXp = save.getInt(s + ".player-xp", 0);
+            double currentHP = save.getDouble(s + ".hp", 0);
+            ArrayList<ItemStack> inventory = new ArrayList<>();
+            for (String i : save.getConfigurationSection(s + ".inventory").getKeys(false))
+                inventory.add(save.getItemStack(s + ".inventory." + i, new ItemStack(Material.AIR, 1)));
+            ArrayList<ItemStack> armor = new ArrayList<>();
+            for (String i : save.getConfigurationSection(s + ".armor").getKeys(false))
+                armor.add(save.getItemStack(s + ".armor." + i, new ItemStack(Material.AIR, 1)));
+            ItemStack mainHand = save.getItemStack(s + ".main-hand", new ItemStack(Material.AIR, 1));
+            ItemStack offHand = save.getItemStack(s + ".off-hand", new ItemStack(Material.AIR, 1));
+            OfflinePlayer player = new OfflinePlayer(Bukkit.getOfflinePlayer(uuid), currentSeconds, location, playerXp, currentHP, inventory, armor, mainHand, offHand);
+            offlinePlayerList.put(uuid, player);
+            entityOfflinePlayerHashMap.put(player.getCloneEntity().getEntityId(), player);
+        }
     }
 
     /**
@@ -70,8 +99,24 @@ public class CloneManager implements Listener { // todo: Perhaps refactor events
     /**
      * Saves all current clones to the disk.
      */
-    public void save () {
-        // todo: Implement saving.
+    public void save () { // Todo: Might be cleaner to make each save themselves.
+        FileConfiguration save = new YamlConfiguration();
+        for (UUID s : getOfflinePlayerList().keySet()) {
+            String uuid = s.toString();
+            OfflinePlayer player = getOfflinePlayerList().get(s);
+            save.set(s + ".current-seconds", player.getCurrentSeconds());
+            save.set(s + ".location", player.getCloneEntity().getLocation());
+            save.set(s + ".player-xp", player.getPlayerExp());
+            save.set(s + ".hp", player.getCurrentHP());
+            ArrayList<ItemStack> inventory = player.getSavedInventoryContents();
+            for (ItemStack i : inventory)
+                save.set(s + ".inventory." + inventory.indexOf(i), i);
+            ArrayList<ItemStack> armor = player.getSavedArmorContents();
+            for (ItemStack i : armor)
+                save.set(i + ".armor." + armor.indexOf(i), i);
+            save.set(s + ".main-hand", player.getMainHand());
+            save.set(s + ".off-hand", player.getOffHand());
+        }
     }
 
     @EventHandler

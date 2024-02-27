@@ -74,6 +74,7 @@ public class OfflinePlayer implements Listener {
         this.savedArmorContents = savedArmorContents;
         this.playerExp = playerExp;
         this.currentHP = currentHP;
+        if (currentHP == 0) isDead = true;
         this.currentSeconds = currentSeconds;
         String customName = OfflinePlayers.getInstance().getConfig().getString("OfflinePlayer.cloneName");
         customName = customName.replaceAll("%PLAYER_NAME", player.getName());

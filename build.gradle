@@ -2,8 +2,8 @@ plugins {
     id 'java'
 }
 
-group 'org.example'
-version '1.0-SNAPSHOT'
+group 'de.snap20lp.offlineplayers'
+version '3.0'
 
 repositories {
     maven { url = 'https://repo.md-5.net/content/groups/public' }
