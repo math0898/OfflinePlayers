@@ -4,15 +4,12 @@ import de.snap20lp.offlineplayers.events.OfflinePlayerDeathEvent;
 import de.snap20lp.offlineplayers.events.OfflinePlayerDespawnEvent;
 import de.snap20lp.offlineplayers.events.OfflinePlayerHitEvent;
 import de.snap20lp.offlineplayers.events.OfflinePlayerSpawnEvent;
-import lombok.Getter;
 import me.libraryaddict.disguise.events.UndisguiseEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -30,10 +27,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.UUID;
 
-@Getter
 public class OfflinePlayers extends JavaPlugin implements Listener {
 
-    private final double version = 2.7;
+    private final double version = 3.0;
     private final HashMap<UUID, OfflinePlayer> offlinePlayerList = new HashMap<>();
     private final HashMap<Integer, OfflinePlayer> entityOfflinePlayerHashMap = new HashMap<>();
     Metrics metrics;
@@ -41,11 +37,19 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
         return getPlugin(OfflinePlayers.class);
     }
 
+    public HashMap<UUID, OfflinePlayer> getOfflinePlayerList () {
+        return offlinePlayerList;
+    }
+
+    public HashMap<Integer, OfflinePlayer> getEntityOfflinePlayerHashMap () {
+        return entityOfflinePlayerHashMap;
+    }
+
     @Override
     public void onEnable() {
         this.metrics = new Metrics(this, 19973);
 
-        Bukkit.getConsoleSender().sendMessage("§aOfflinePlayers starting in version " + getVersion());
+        Bukkit.getConsoleSender().sendMessage("§aOfflinePlayers starting in version " + version);
         if (getServer().getPluginManager().getPlugin("LibsDisguises") == null || getServer().getPluginManager().getPlugin("ProtocolLib") == null) {
             Bukkit.getConsoleSender().sendMessage("§4[OfflinePlayers] ERROR: LibsDisguises is not activated! Please install LibsDisguises and ProtocolLib to use this plugin!");
             Bukkit.getPluginManager().disablePlugin(this);
@@ -80,17 +84,17 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
         this.metrics.shutdown();
 
         if (getServer().getPluginManager().getPlugin("LibsDisguises") != null && getServer().getPluginManager().getPlugin("ProtocolLib") != null) {
-            getOfflinePlayerList().values().forEach(OfflinePlayer::despawnClone);
+            offlinePlayerList.values().forEach(OfflinePlayer::despawnClone);
         }
     }
 
     @EventHandler
     public void on(EntityResurrectEvent entityResurrectEvent) {
-        if (getEntityOfflinePlayerHashMap().containsKey(entityResurrectEvent.getEntity().getEntityId())) {
-            if (getEntityOfflinePlayerHashMap().get(entityResurrectEvent.getEntity().getEntityId()) == null) {
+        if (entityOfflinePlayerHashMap.containsKey(entityResurrectEvent.getEntity().getEntityId())) {
+            if (entityOfflinePlayerHashMap.get(entityResurrectEvent.getEntity().getEntityId()) == null) {
                 return;
             }
-            OfflinePlayer offlinePlayer = getEntityOfflinePlayerHashMap().get(entityResurrectEvent.getEntity().getEntityId());
+            OfflinePlayer offlinePlayer = entityOfflinePlayerHashMap.get(entityResurrectEvent.getEntity().getEntityId());
             if (offlinePlayer.getMainHand().getType() != Material.TOTEM_OF_UNDYING && offlinePlayer.getOffHand().getType() != Material.TOTEM_OF_UNDYING) {
                 entityResurrectEvent.setCancelled(true);
                 return;
@@ -106,13 +110,13 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
             OfflinePlayer newOfflinePlayer = new OfflinePlayer(offlinePlayer.getOfflinePlayer(), offlinePlayer.getCurrentSeconds(), offlinePlayer.getCloneEntity().getLocation(), offlinePlayer.getPlayerExp(), offlinePlayer.getCurrentHP(), offlinePlayer.getSavedInventoryContents(), offlinePlayer.getSavedArmorContents(), offlinePlayer.getMainHand(), offlinePlayer.getOffHand());
 
 
-            getOfflinePlayerList().remove(offlinePlayer.getOfflinePlayer().getUniqueId());
-            getEntityOfflinePlayerHashMap().remove(entityResurrectEvent.getEntity().getEntityId());
+            offlinePlayerList.remove(offlinePlayer.getOfflinePlayer().getUniqueId());
+            entityOfflinePlayerHashMap.remove(entityResurrectEvent.getEntity().getEntityId());
             offlinePlayer.despawnClone();
 
 
-            getOfflinePlayerList().put(newOfflinePlayer.getOfflinePlayer().getUniqueId(), newOfflinePlayer);
-            getEntityOfflinePlayerHashMap().put(newOfflinePlayer.getCloneEntity().getEntityId(), newOfflinePlayer);
+            offlinePlayerList.put(newOfflinePlayer.getOfflinePlayer().getUniqueId(), newOfflinePlayer);
+            entityOfflinePlayerHashMap.put(newOfflinePlayer.getCloneEntity().getEntityId(), newOfflinePlayer);
 
         }
     }
@@ -123,11 +127,11 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
     @EventHandler
     public void on(PlayerJoinEvent playerJoinEvent) {
 
-        if (getOfflinePlayerList().containsKey(playerJoinEvent.getPlayer().getUniqueId())) {
-            if (getOfflinePlayerList().get(playerJoinEvent.getPlayer().getUniqueId()) == null) {
+        if (offlinePlayerList.containsKey(playerJoinEvent.getPlayer().getUniqueId())) {
+            if (offlinePlayerList.get(playerJoinEvent.getPlayer().getUniqueId()) == null) {
                 return;
             }
-            OfflinePlayer clone = getOfflinePlayerList().get(playerJoinEvent.getPlayer().getUniqueId());
+            OfflinePlayer clone = offlinePlayerList.get(playerJoinEvent.getPlayer().getUniqueId());
 
 
             OfflinePlayerDespawnEvent offlinePlayerDespawnEvent = new OfflinePlayerDespawnEvent(clone);
@@ -162,7 +166,7 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
 
             clone.despawnClone();
 
-            getOfflinePlayerList().remove(playerJoinEvent.getPlayer().getUniqueId());
+            offlinePlayerList.remove(playerJoinEvent.getPlayer().getUniqueId());
         }
     }
 
@@ -186,14 +190,14 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
         OfflinePlayer offlinePlayer = new OfflinePlayer(quitPlayer, new ArrayList<>(Arrays.asList(quitPlayer.getInventory().getContents())), quitPlayer.getEquipment() == null ? new ArrayList<>() : new ArrayList<>(Arrays.asList(quitPlayer.getInventory().getArmorContents())), quitPlayer.getEquipment().getItemInMainHand(), quitPlayer.getEquipment().getItemInOffHand());
         OfflinePlayerSpawnEvent offlinePlayerSpawnEvent = new OfflinePlayerSpawnEvent(offlinePlayer);
         Bukkit.getPluginManager().callEvent(offlinePlayerSpawnEvent);
-        getOfflinePlayerList().put(quitPlayer.getUniqueId(), offlinePlayer);
-        getEntityOfflinePlayerHashMap().put(offlinePlayer.getCloneEntity().getEntityId(), offlinePlayer);
+        offlinePlayerList.put(quitPlayer.getUniqueId(), offlinePlayer);
+        entityOfflinePlayerHashMap.put(offlinePlayer.getCloneEntity().getEntityId(), offlinePlayer);
     }
 
     @EventHandler
     public void on(UndisguiseEvent undisguiseEvent) {
-        if(getEntityOfflinePlayerHashMap().containsKey(undisguiseEvent.getEntity().getEntityId())) {
-            OfflinePlayer offlinePlayer = getEntityOfflinePlayerHashMap().get(undisguiseEvent.getEntity().getEntityId());
+        if(entityOfflinePlayerHashMap.containsKey(undisguiseEvent.getEntity().getEntityId())) {
+            OfflinePlayer offlinePlayer = entityOfflinePlayerHashMap.get(undisguiseEvent.getEntity().getEntityId());
             offlinePlayer.replaceCloneStats((LivingEntity) undisguiseEvent.getEntity());
         }
     }
@@ -202,8 +206,8 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
     public void on(PlayerDropItemEvent event) {
         if (getConfig().getBoolean("OfflinePlayer.cloneItemPickup")) {
             event.getItemDrop().getNearbyEntities(6, 6, 6).forEach(entity -> {
-                if (getEntityOfflinePlayerHashMap().containsKey(entity.getEntityId())) {
-                    OfflinePlayer offlinePlayer = getEntityOfflinePlayerHashMap().get(entity.getEntityId());
+                if (entityOfflinePlayerHashMap.containsKey(entity.getEntityId())) {
+                    OfflinePlayer offlinePlayer = entityOfflinePlayerHashMap.get(entity.getEntityId());
                     Bukkit.getScheduler().scheduleSyncDelayedTask(this, () -> {
 
                         if(!event.getItemDrop().getNearbyEntities(1, 1, 1).contains(offlinePlayer.getCloneEntity())){
@@ -222,8 +226,8 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
 
     @EventHandler
     public void on(EntityCombustEvent event) {
-        if (getEntityOfflinePlayerHashMap().containsKey(event.getEntity().getEntityId())) {
-            OfflinePlayer offlinePlayer = getEntityOfflinePlayerHashMap().get(event.getEntity().getEntityId());
+        if (entityOfflinePlayerHashMap.containsKey(event.getEntity().getEntityId())) {
+            OfflinePlayer offlinePlayer = entityOfflinePlayerHashMap.get(event.getEntity().getEntityId());
             if (offlinePlayer.getCloneEntity().getLocation().getBlock().getType() != Material.LAVA && offlinePlayer.getCloneEntity().getLocation().getBlock().getType() != Material.FIRE) {
                 event.setCancelled(true);
             }
@@ -234,7 +238,7 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
     public void on(EntityTargetEvent entityTargetEvent) {
         if (entityTargetEvent.getTarget() == null)
             return;
-        if (getEntityOfflinePlayerHashMap().containsKey(entityTargetEvent.getTarget().getEntityId())) {
+        if (entityOfflinePlayerHashMap.containsKey(entityTargetEvent.getTarget().getEntityId())) {
             entityTargetEvent.setCancelled(true);
             entityTargetEvent.setTarget(null);
         }
@@ -243,7 +247,7 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
     @EventHandler
     public void on(EntityDeathEvent event) {
         OfflinePlayer offlinePlayer = null;
-        for (OfflinePlayer value : getOfflinePlayerList().values()) {
+        for (OfflinePlayer value : offlinePlayerList.values()) {
             if(value.getCloneEntity().getUniqueId().equals(event.getEntity().getUniqueId())) {
                 offlinePlayer = value;
                 break;
@@ -280,8 +284,8 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
 
     @EventHandler
     public void on(EntityDamageEvent event) {
-        if (event.getEntity().getType() == EntityType.valueOf(OfflinePlayers.getInstance().getConfig().getString("OfflinePlayer.cloneRawEntity")) && getEntityOfflinePlayerHashMap().containsKey(event.getEntity().getEntityId())) {
-            OfflinePlayer offlinePlayer = getEntityOfflinePlayerHashMap().get(event.getEntity().getEntityId());
+        if (event.getEntity().getType() == EntityType.valueOf(OfflinePlayers.getInstance().getConfig().getString("OfflinePlayer.cloneRawEntity")) && entityOfflinePlayerHashMap.containsKey(event.getEntity().getEntityId())) {
+            OfflinePlayer offlinePlayer = entityOfflinePlayerHashMap.get(event.getEntity().getEntityId());
             if (!offlinePlayer.isCloneIsHittable()) {
                 event.setCancelled(true);
                 return;
@@ -292,8 +296,8 @@ public class OfflinePlayers extends JavaPlugin implements Listener {
 
     @EventHandler
     public void on(EntityDamageByEntityEvent event) {
-        if (getEntityOfflinePlayerHashMap().containsKey(event.getEntity().getEntityId()) && event.getDamager() instanceof Player damager) {
-            OfflinePlayer offlinePlayer = getEntityOfflinePlayerHashMap().get(event.getEntity().getEntityId());
+        if (entityOfflinePlayerHashMap.containsKey(event.getEntity().getEntityId()) && event.getDamager() instanceof Player damager) {
+            OfflinePlayer offlinePlayer = entityOfflinePlayerHashMap.get(event.getEntity().getEntityId());
             if (!offlinePlayer.isCloneIsHittable()) {
                 event.setCancelled(true);
             } else {

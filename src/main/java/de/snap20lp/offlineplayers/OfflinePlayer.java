@@ -1,7 +1,5 @@
 package de.snap20lp.offlineplayers;
 
-import lombok.Getter;
-import lombok.Setter;
 import me.libraryaddict.disguise.DisguiseAPI;
 import me.libraryaddict.disguise.LibsDisguises;
 import me.libraryaddict.disguise.disguisetypes.DisguiseType;
@@ -21,7 +19,6 @@ import org.bukkit.potion.PotionEffectType;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-@Getter
 public class OfflinePlayer implements Listener {
 
     private final org.bukkit.OfflinePlayer offlinePlayer;
@@ -34,14 +31,15 @@ public class OfflinePlayer implements Listener {
     private final int playerExp;
     private final String customName;
     private final int despawnTimerSeconds = OfflinePlayers.getInstance().getConfig().getInt("OfflinePlayer.cloneDe-spawnTimer.timer");
-    @Setter
     private Location spawnLocation;
     private int despawnTask = 0, updateTask = 0;
     private int currentSeconds = 0;
-    @Setter
     private boolean isHidden = false;
-    @Setter
-    private boolean cloneIsHittable = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.cloneIsHittable"), cloneHasAI = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.cloneHasAI"), isDead = false, despawnTimerEnabled = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.cloneDe-spawnTimer.enabled"),
+
+    private boolean cloneIsHittable = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.cloneIsHittable"),
+            cloneHasAI = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.cloneHasAI"),
+            isDead = false,
+            despawnTimerEnabled = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.cloneDe-spawnTimer.enabled"),
             isBlockEntity = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.useBlockEntity");
     private LivingEntity cloneEntity;
     private TargetedDisguise disguisedEntity;
@@ -62,7 +60,7 @@ public class OfflinePlayer implements Listener {
         this.customName = customName;
         spawnClone();
         despawnClone();
-        setHidden(true);
+        isHidden = true;
         startTimers();
     }
 
@@ -82,8 +80,72 @@ public class OfflinePlayer implements Listener {
         this.customName = customName;
         spawnClone();
         despawnClone();
-        setHidden(true);
+        isHidden = true;
         startTimers();
+    }
+
+    public TargetedDisguise getDisguisedEntity () {
+        return disguisedEntity;
+    }
+
+    public ItemStack getMainHand () {
+        return mainHand;
+    }
+
+    public ItemStack getOffHand () {
+        return offHand;
+    }
+
+    public org.bukkit.OfflinePlayer getOfflinePlayer () {
+        return this.offlinePlayer;
+    }
+
+    public int getCurrentSeconds () {
+        return currentSeconds;
+    }
+
+    public LivingEntity getCloneEntity () {
+        return cloneEntity;
+    }
+
+    public int getPlayerExp () {
+        return playerExp;
+    }
+
+    public double getCurrentHP () {
+        return currentHP;
+    }
+
+    public ArrayList<ItemStack> getSavedInventoryContents () {
+        return savedInventoryContents;
+    }
+
+    public ArrayList<ItemStack> getSavedArmorContents () {
+        return savedArmorContents;
+    }
+
+    public boolean isCloneHasAI () {
+        return cloneHasAI;
+    }
+
+    public boolean isDead () {
+        return isDead;
+    }
+
+    public void setDead (boolean val) {
+        isDead = val;
+    }
+
+    public ArrayList<ItemStack> getAddedItems () {
+        return addedItems;
+    }
+
+    public void setHidden (boolean val) {
+        isHidden = val;
+    }
+
+    public boolean isCloneIsHittable () {
+        return cloneIsHittable;
     }
 
     private void startTimers() {
@@ -92,7 +154,7 @@ public class OfflinePlayer implements Listener {
             .scheduleSyncRepeatingTask(
                 OfflinePlayers.getInstance(),
                 () -> {
-                  if (isDead()) return;
+                  if (isDead) return;
                   int distance =
                       OfflinePlayers.getInstance()
                           .getConfig()
@@ -149,7 +211,7 @@ public class OfflinePlayer implements Listener {
 
                   if (isNearby.get() && isHidden) {
                     spawnClone();
-                    setHidden(false);
+                    isHidden = false;
                   }
                 },
                 10,
