@@ -77,7 +77,9 @@ public class CloneManager implements Listener { // todo: Perhaps refactor events
                     armor.add(save.getItemStack(s + ".armor." + i, new ItemStack(Material.AIR, 1)));
             ItemStack mainHand = save.getItemStack(s + ".main-hand", new ItemStack(Material.AIR, 1));
             ItemStack offHand = save.getItemStack(s + ".off-hand", new ItemStack(Material.AIR, 1));
+            boolean isDead = save.getBoolean(s + ".is-dead", false);
             OfflinePlayer player = new OfflinePlayer(Bukkit.getOfflinePlayer(uuid), currentSeconds, location, playerXp, currentHP, inventory, armor, mainHand, offHand);
+            player.setDead(isDead);
             offlinePlayerList.put(uuid, player);
             entityOfflinePlayerHashMap.put(player.getCloneEntity().getEntityId(), player);
         }
@@ -121,6 +123,7 @@ public class CloneManager implements Listener { // todo: Perhaps refactor events
                 save.set(uuid + ".armor." + armor.indexOf(i), i);
             save.set(uuid + ".main-hand", player.getMainHand());
             save.set(uuid + ".off-hand", player.getOffHand());
+            save.set(uuid + ".is-dead", player.isDead());
         }
         try {
             save.save("./plugins/OfflinePlayers/clones.yml");
