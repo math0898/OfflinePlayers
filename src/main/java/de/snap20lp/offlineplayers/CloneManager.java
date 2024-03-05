@@ -225,8 +225,13 @@ public class CloneManager implements Listener { // todo: Perhaps refactor events
                 return;
 
         OfflinePlayer offlinePlayer = new OfflinePlayer(quitPlayer, new ArrayList<>(Arrays.asList(quitPlayer.getInventory().getContents())), quitPlayer.getEquipment() == null ? new ArrayList<>() : new ArrayList<>(Arrays.asList(quitPlayer.getInventory().getArmorContents())), quitPlayer.getEquipment().getItemInMainHand(), quitPlayer.getEquipment().getItemInOffHand());
-        OfflinePlayerSpawnEvent offlinePlayerSpawnEvent = new OfflinePlayerSpawnEvent(offlinePlayer);
+        OfflinePlayerSpawnEvent offlinePlayerSpawnEvent = new OfflinePlayerSpawnEvent(offlinePlayer, quitPlayer.getLocation());
         Bukkit.getPluginManager().callEvent(offlinePlayerSpawnEvent);
+        quitPlayer.teleport(offlinePlayerSpawnEvent.getLocation());
+        offlinePlayer.setSpawnLocation(offlinePlayerSpawnEvent.getLocation());
+        offlinePlayer.spawnClone();
+        offlinePlayer.despawnClone();
+        offlinePlayer.startTimers();
         offlinePlayerList.put(quitPlayer.getUniqueId(), offlinePlayer);
         entityOfflinePlayerHashMap.put(offlinePlayer.getCloneEntity().getEntityId(), offlinePlayer);
     }

@@ -20,13 +20,14 @@ public class OfflinePlayers extends JavaPlugin { // todo: Maybe create a config 
         this.metrics = new Metrics(this, 19973);
 
         Bukkit.getConsoleSender().sendMessage("§aOfflinePlayers starting in version " + version);
+        this.saveDefaultConfig();
         Bukkit.getPluginManager().registerEvents(CloneManager.getInstance(), this);
+        Bukkit.getPluginManager().registerEvents(new MortalMaker(), this);
         if (getServer().getPluginManager().getPlugin("LibsDisguises") == null || getServer().getPluginManager().getPlugin("ProtocolLib") == null) {
             Bukkit.getConsoleSender().sendMessage("§4[OfflinePlayers] ERROR: LibsDisguises is not activated! Please install LibsDisguises and ProtocolLib to use this plugin!");
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
-        this.saveDefaultConfig();
         try {
             EntityType.valueOf(getConfig().getString("OfflinePlayer.cloneRawEntity"));
             if(OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.useBlockEntity")) {

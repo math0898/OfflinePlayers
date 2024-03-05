@@ -60,10 +60,10 @@ public class OfflinePlayer implements Listener {
         customName = customName.replaceAll("%PLAYER_NAME", player.getName());
         customName = customName.replaceAll("%DESPAWN_TIMER%", String.valueOf(despawnTimerSeconds - currentSeconds));
         this.customName = customName;
-        spawnClone();
-        despawnClone();
+//        spawnClone();
+//        despawnClone();
         isHidden = true;
-        startTimers();
+//        startTimers();
     }
 
     public OfflinePlayer(org.bukkit.OfflinePlayer player, int currentSeconds, Location spawnLocation, int playerExp, double currentHP, ArrayList<ItemStack> savedInventoryContents, ArrayList<ItemStack> savedArmorContents, ItemStack mainHand, ItemStack offHand) {
@@ -151,7 +151,11 @@ public class OfflinePlayer implements Listener {
         return cloneIsHittable;
     }
 
-    private void startTimers() {
+    public void setSpawnLocation (Location val) {
+        this.spawnLocation = val;
+    }
+
+    public void startTimers() {
     updateTask =
         Bukkit.getScheduler()
             .scheduleSyncRepeatingTask(

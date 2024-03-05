@@ -30,3 +30,6 @@ OfflinePlayer:
   permissions: #If enabled players will only get a clone if they have the permission.
     enabled: false
     permission: 'offlineplayer.clone'
+  mortal-maker:
+    world-whitelist: # Players in these worlds will be brought to their 'Bed Spawn > Towny Spawn > (Overworld: 'world') World Spawn'
+      - CreativeWorld
