@@ -30,12 +30,18 @@ public class MortalMaker implements Listener {
     private final boolean isBedEnabled;
 
     /**
+     * The world to teleport players to the spawn of.
+     */
+    private final String destinationWorld;
+
+    /**
      * Creates a new MortalMaker and loads config file values.
      */
     public MortalMaker () {
         FileConfiguration config = OfflinePlayers.getInstance().getConfig();
         whitelist = config.getStringList("OfflinePlayer.mortal-maker.world-whitelist");
         isBedEnabled = config.getBoolean("OfflinePlayer.mortal-maker.is-bed-enabled", false);
+        destinationWorld = config.getString("OfflinePlayer.mortal-maker.destination-world", "world");
     }
 
     /**
@@ -65,7 +71,7 @@ public class MortalMaker implements Listener {
                     } catch (TownyException ignored) { }
                 }
             }
-            Location spawn = Bukkit.getWorld("world").getSpawnLocation();
+            Location spawn = Bukkit.getWorld(destinationWorld).getSpawnLocation();
             event.setLocation(spawn);
         }
     }
