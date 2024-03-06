@@ -48,10 +48,11 @@ public class MortalMaker implements Listener {
         if (whitelist.contains(event.getLocation().getWorld().getName())) {
             if (isBedEnabled) {
                 Location bedSpawn = event.getOfflinePlayer().getOfflinePlayer().getBedSpawnLocation();
-                if (bedSpawn != null) {
-                    event.setLocation(event.getOfflinePlayer().getOfflinePlayer().getBedSpawnLocation());
-                    return;
-                }
+                if (bedSpawn != null)
+                    if (!whitelist.contains(bedSpawn.getWorld().getName())) {
+                        event.setLocation(event.getOfflinePlayer().getOfflinePlayer().getBedSpawnLocation());
+                        return;
+                    }
             }
             TownyAPI api = OfflinePlayers.getTownyAPI();
             if (api != null) {
