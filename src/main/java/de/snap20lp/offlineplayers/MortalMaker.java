@@ -1,5 +1,8 @@
 package de.snap20lp.offlineplayers;
 
+import com.palmergames.bukkit.towny.TownyAPI;
+import com.palmergames.bukkit.towny.exceptions.TownyException;
+import com.palmergames.bukkit.towny.object.Town;
 import de.snap20lp.offlineplayers.events.OfflinePlayerSpawnEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -42,7 +45,17 @@ public class MortalMaker implements Listener {
                 event.setLocation(event.getOfflinePlayer().getOfflinePlayer().getBedSpawnLocation());
                 return;
             }
-            // todo: Towny Spawn.
+            TownyAPI api = OfflinePlayers.getTownyAPI();
+            if (api != null) {
+                Town town = api.getTown(event.getOfflinePlayer().getOfflinePlayer().getUniqueId());
+                if (town != null) {
+                    try {
+                        Location townSpawn = town.getSpawn();
+                        event.setLocation(townSpawn);
+                        return;
+                    } catch (TownyException ignored) { }
+                }
+            }
             Location spawn = Bukkit.getWorld("world").getSpawnLocation();
             event.setLocation(spawn);
         }

@@ -8,3 +8,4 @@ main: de.snap20lp.offlineplayers.OfflinePlayers
 
 softdepend:
   - LibsDisguises
+  - Towny

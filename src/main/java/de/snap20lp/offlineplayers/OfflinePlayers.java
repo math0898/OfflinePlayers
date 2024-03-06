@@ -1,5 +1,6 @@
 package de.snap20lp.offlineplayers;
 
+import com.palmergames.bukkit.towny.TownyAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.data.BlockData;
@@ -15,12 +16,28 @@ public class OfflinePlayers extends JavaPlugin { // todo: Maybe create a config 
         return getPlugin(OfflinePlayers.class);
     }
 
+    /**
+     * The active Towny api instance.
+     */
+    private static TownyAPI townyAPI;
+
+    /**
+     * Accessor method for the towny api. No promises to not provide null.
+     *
+     * @return The Towny API.
+     */
+    public static TownyAPI getTownyAPI () {
+        return townyAPI;
+    }
+
     @Override
     public void onEnable() {
         this.metrics = new Metrics(this, 19973);
 
         Bukkit.getConsoleSender().sendMessage("§aOfflinePlayers starting in version " + version);
         this.saveDefaultConfig();
+        if (Bukkit.getPluginManager().isPluginEnabled("Towny"))
+            townyAPI = TownyAPI.getInstance();
         Bukkit.getPluginManager().registerEvents(CloneManager.getInstance(), this);
         Bukkit.getPluginManager().registerEvents(new MortalMaker(), this);
         if (getServer().getPluginManager().getPlugin("LibsDisguises") == null || getServer().getPluginManager().getPlugin("ProtocolLib") == null) {
