@@ -56,7 +56,7 @@ public class MortalMaker implements Listener {
             }
             TownyAPI api = OfflinePlayers.getTownyAPI();
             if (api != null) {
-                Town town = api.getTown(event.getOfflinePlayer().getOfflinePlayer().getUniqueId());
+                Town town = api.getTown(event.getOfflinePlayer().getOfflinePlayer().getPlayer());
                 if (town != null) {
                     try {
                         Location townSpawn = town.getSpawn();
