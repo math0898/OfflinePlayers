@@ -33,3 +33,4 @@ OfflinePlayer:
   mortal-maker:
     world-whitelist: # Players in these worlds will be brought to their 'Bed Spawn > Towny Spawn > (Overworld: 'world') World Spawn'
       - CreativeWorld
+    is-bed-enabled: true

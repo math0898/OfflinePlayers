@@ -22,7 +22,12 @@ public class MortalMaker implements Listener {
     /**
      * A list of worlds which the MortalMaker looks at.
      */
-    List<String> whitelist;
+    private final List<String> whitelist;
+
+    /**
+     * Whether bed spawns are allowed or not.
+     */
+    private final boolean isBedEnabled;
 
     /**
      * Creates a new MortalMaker and loads config file values.
@@ -30,6 +35,7 @@ public class MortalMaker implements Listener {
     public MortalMaker () {
         FileConfiguration config = OfflinePlayers.getInstance().getConfig();
         whitelist = config.getStringList("OfflinePlayer.mortal-maker.world-whitelist");
+        isBedEnabled = config.getBoolean("OfflinePlayer.mortal-maker.is-bed-enabled", false);
     }
 
     /**
@@ -40,10 +46,12 @@ public class MortalMaker implements Listener {
     @EventHandler
     public void onCloneSpawn (OfflinePlayerSpawnEvent event) {
         if (whitelist.contains(event.getLocation().getWorld().getName())) {
-            Location bedSpawn = event.getOfflinePlayer().getOfflinePlayer().getBedSpawnLocation();
-            if (bedSpawn != null ) {
-                event.setLocation(event.getOfflinePlayer().getOfflinePlayer().getBedSpawnLocation());
-                return;
+            if (isBedEnabled) {
+                Location bedSpawn = event.getOfflinePlayer().getOfflinePlayer().getBedSpawnLocation();
+                if (bedSpawn != null) {
+                    event.setLocation(event.getOfflinePlayer().getOfflinePlayer().getBedSpawnLocation());
+                    return;
+                }
             }
             TownyAPI api = OfflinePlayers.getTownyAPI();
             if (api != null) {
