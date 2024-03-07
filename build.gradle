@@ -3,7 +3,7 @@ plugins {
 }
 
 group 'de.snap20lp.offlineplayers'
-version '3.1'
+version '3.1.1'
 
 repositories {
     maven { url = 'https://repo.md-5.net/content/groups/public' }
@@ -22,6 +22,17 @@ repositories {
         name = 'glaremasters repo'
         url = 'https://repo.glaremasters.me/repository/towny/'
     }
+    maven {
+        url = "https://repo.onarandombox.com/content/groups/public/"
+    }
+    maven {
+        name "papermc"
+        url "https://papermc.io/repo/repository/maven-public/"
+    }
+}
+
+configurations {
+    compileOnly.setCanBeResolved(true)
 }
 
 dependencies {
@@ -30,6 +41,7 @@ dependencies {
     implementation 'com.comphenix.protocol:ProtocolLib:5.0.0'
     implementation 'com.google.code.gson:gson:2.10.1'
     compileOnly 'com.palmergames.bukkit.towny:towny:0.100.1.18'
+    compileOnly 'com.onarandombox.multiverseinventories:multiverse-inventories:4.2.5'
 }
 
 test {

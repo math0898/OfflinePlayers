@@ -1,5 +1,5 @@
 name: OfflinePlayers
-version: 3.0
+version: 3.1.1
 authors:
   - snap20lp
   - Sugaku
@@ -9,3 +9,4 @@ main: de.snap20lp.offlineplayers.OfflinePlayers
 softdepend:
   - LibsDisguises
   - Towny
+  - Multiverse-Inventories

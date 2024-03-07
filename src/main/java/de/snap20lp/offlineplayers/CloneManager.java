@@ -224,11 +224,23 @@ public class CloneManager implements Listener { // todo: Perhaps refactor events
             if (!quitPlayer.hasPermission(config.getString("OfflinePlayer.permissions.permission", "offlineplayer.clone")))
                 return;
 
-        OfflinePlayer offlinePlayer = new OfflinePlayer(quitPlayer, new ArrayList<>(Arrays.asList(quitPlayer.getInventory().getContents())), quitPlayer.getEquipment() == null ? new ArrayList<>() : new ArrayList<>(Arrays.asList(quitPlayer.getInventory().getArmorContents())), quitPlayer.getEquipment().getItemInMainHand(), quitPlayer.getEquipment().getItemInOffHand());
-        OfflinePlayerSpawnEvent offlinePlayerSpawnEvent = new OfflinePlayerSpawnEvent(offlinePlayer, quitPlayer.getLocation());
+        OfflinePlayer offlinePlayer = new OfflinePlayer(quitPlayer,
+                new ArrayList<>(Arrays.asList(quitPlayer.getInventory().getContents())),
+                quitPlayer.getEquipment() == null ? new ArrayList<>() : new ArrayList<>(Arrays.asList(quitPlayer.getInventory().getArmorContents())),
+                quitPlayer.getEquipment().getItemInMainHand(),
+                quitPlayer.getEquipment().getItemInOffHand());
+        OfflinePlayerSpawnEvent offlinePlayerSpawnEvent = new OfflinePlayerSpawnEvent(offlinePlayer,
+                quitPlayer.getLocation(),
+                quitPlayer.getInventory().getContents(),
+                quitPlayer.getEquipment().getArmorContents(),
+                quitPlayer.getEquipment().getItemInOffHand());
         Bukkit.getPluginManager().callEvent(offlinePlayerSpawnEvent);
         quitPlayer.teleport(offlinePlayerSpawnEvent.getLocation());
-        offlinePlayer = new OfflinePlayer(quitPlayer, new ArrayList<>(Arrays.asList(quitPlayer.getInventory().getContents())), quitPlayer.getEquipment() == null ? new ArrayList<>() : new ArrayList<>(Arrays.asList(quitPlayer.getInventory().getArmorContents())), quitPlayer.getEquipment().getItemInMainHand(), quitPlayer.getEquipment().getItemInOffHand());
+        offlinePlayer = new OfflinePlayer(quitPlayer,
+                new ArrayList<>(Arrays.asList(offlinePlayerSpawnEvent.getInventory())),
+                offlinePlayerSpawnEvent.getArmor() == null ? new ArrayList<>() : new ArrayList<>(Arrays.asList(offlinePlayerSpawnEvent.getArmor())),
+                new ItemStack(Material.AIR, 1)/* offlinePlayerSpawnEvent.getMainHand() */, // todo: Figure out a way to pull this from MultiverseInventories without duplicating items.
+                offlinePlayerSpawnEvent.getOffHand());
         offlinePlayer.setSpawnLocation(offlinePlayerSpawnEvent.getLocation());
         offlinePlayer.spawnClone();
         offlinePlayer.despawnClone();

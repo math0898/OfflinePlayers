@@ -1,5 +1,8 @@
 package de.snap20lp.offlineplayers;
 
+import com.onarandombox.multiverseinventories.MultiverseInventories;
+import com.onarandombox.multiverseinventories.profile.PlayerProfile;
+import com.onarandombox.multiverseinventories.share.Sharables;
 import com.palmergames.bukkit.towny.TownyAPI;
 import com.palmergames.bukkit.towny.exceptions.TownyException;
 import com.palmergames.bukkit.towny.object.Town;
@@ -9,6 +12,7 @@ import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 
@@ -50,29 +54,37 @@ public class MortalMaker implements Listener {
      * @param event The OfflinePlayerSpawnEvent.
      */
     @EventHandler
-    public void onCloneSpawn (OfflinePlayerSpawnEvent event) {
+    public void onCloneSpawn (OfflinePlayerSpawnEvent event) { // todo: This method requires a lot of cognitive load to understand. Simplify by breaking up into more readable chunks.
         if (whitelist.contains(event.getLocation().getWorld().getName())) {
+            Location spawn = null;
             if (isBedEnabled) {
-                Location bedSpawn = event.getOfflinePlayer().getOfflinePlayer().getBedSpawnLocation();
-                if (bedSpawn != null)
-                    if (!whitelist.contains(bedSpawn.getWorld().getName())) {
-                        event.setLocation(event.getOfflinePlayer().getOfflinePlayer().getBedSpawnLocation());
-                        return;
-                    }
+                spawn = event.getOfflinePlayer().getOfflinePlayer().getBedSpawnLocation();
+                if (spawn != null)
+                    if (whitelist.contains(spawn.getWorld().getName()))
+                        spawn = null;
+
             }
             TownyAPI api = OfflinePlayers.getTownyAPI();
-            if (api != null) {
+            if (api != null && spawn != null) {
                 Town town = api.getTown(event.getOfflinePlayer().getOfflinePlayer().getPlayer());
                 if (town != null) {
                     try {
-                        Location townSpawn = town.getSpawn();
-                        event.setLocation(townSpawn);
-                        return;
+                        spawn = town.getSpawn();
                     } catch (TownyException ignored) { }
                 }
             }
-            Location spawn = Bukkit.getWorld(destinationWorld).getSpawnLocation();
+            if (spawn == null) spawn = Bukkit.getWorld(destinationWorld).getSpawnLocation();
             event.setLocation(spawn);
+            MultiverseInventories multiInvAPI = OfflinePlayers.getMultiverseInventoriesAPI();
+            if (multiInvAPI != null) {
+                PlayerProfile profile = multiInvAPI.getGroupManager().getGroup(spawn.getWorld().getName()).getGroupProfileContainer().getPlayerData(event.getOfflinePlayer().getOfflinePlayer().getPlayer());
+                ItemStack[] inv = profile.get(Sharables.INVENTORY);
+                ItemStack[] armor = profile.get(Sharables.ARMOR);
+                ItemStack offHand = profile.get(Sharables.OFF_HAND);
+                event.setInventory(inv);
+                event.setArmor(armor);
+                event.setOffHand(offHand);
+            }
         }
     }
 }

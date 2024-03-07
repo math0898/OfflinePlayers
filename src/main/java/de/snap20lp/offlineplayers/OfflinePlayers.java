@@ -1,5 +1,6 @@
 package de.snap20lp.offlineplayers;
 
+import com.onarandombox.multiverseinventories.MultiverseInventories;
 import com.palmergames.bukkit.towny.TownyAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -8,8 +9,6 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class OfflinePlayers extends JavaPlugin { // todo: Maybe create a config manager. Perhaps even enum options with default values.
-
-    private final double version = 3.0;
 
     Metrics metrics;
     public static OfflinePlayers getInstance() {
@@ -22,22 +21,37 @@ public class OfflinePlayers extends JavaPlugin { // todo: Maybe create a config 
     private static TownyAPI townyAPI;
 
     /**
+     * The active Multiverse-Inventories instance.
+     */
+    private static MultiverseInventories multiverseInventoriesAPI;
+
+    /**
      * Accessor method for the towny api. No promises to not provide null.
      *
      * @return The Towny API.
      */
     public static TownyAPI getTownyAPI () {
         return townyAPI;
+    } // todo: Group APIs into an API manager.
+
+    /**
+     * Accessor method for the MultiverseInventories api. No promises to not provide null.
+     *
+     * @return The MultiverseInventories API.
+     */
+    public static MultiverseInventories getMultiverseInventoriesAPI () {
+        return multiverseInventoriesAPI;
     }
 
     @Override
     public void onEnable() {
         this.metrics = new Metrics(this, 19973);
-
-        Bukkit.getConsoleSender().sendMessage("§aOfflinePlayers starting in version " + version);
+        Bukkit.getConsoleSender().sendMessage("§aOfflinePlayers starting in version " + getDescription().getVersion());
         this.saveDefaultConfig();
         if (Bukkit.getPluginManager().isPluginEnabled("Towny"))
             townyAPI = TownyAPI.getInstance();
+        if (Bukkit.getPluginManager().isPluginEnabled("Multiverse-Inventories"))
+            multiverseInventoriesAPI = (MultiverseInventories) Bukkit.getPluginManager().getPlugin("Multiverse-Inventories");
         Bukkit.getPluginManager().registerEvents(CloneManager.getInstance(), this);
         Bukkit.getPluginManager().registerEvents(new MortalMaker(), this);
         if (getServer().getPluginManager().getPlugin("LibsDisguises") == null || getServer().getPluginManager().getPlugin("ProtocolLib") == null) {
