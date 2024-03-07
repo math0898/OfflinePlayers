@@ -77,7 +77,7 @@ public class MortalMaker implements Listener {
             event.setLocation(spawn);
             MultiverseInventories multiInvAPI = OfflinePlayers.getMultiverseInventoriesAPI();
             if (multiInvAPI != null) {
-                PlayerProfile profile = multiInvAPI.getGroupManager().getGroup(spawn.getWorld().getName()).getGroupProfileContainer().getPlayerData(event.getOfflinePlayer().getOfflinePlayer().getPlayer());
+                PlayerProfile profile = multiInvAPI.getGroupManager().getGroupsForWorld(spawn.getWorld().getName()).get(0).getGroupProfileContainer().getPlayerData(event.getOfflinePlayer().getOfflinePlayer().getPlayer());
                 ItemStack[] inv = profile.get(Sharables.INVENTORY);
                 ItemStack[] armor = profile.get(Sharables.ARMOR);
                 ItemStack offHand = profile.get(Sharables.OFF_HAND);

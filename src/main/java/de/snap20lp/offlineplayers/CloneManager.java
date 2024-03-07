@@ -184,7 +184,7 @@ public class CloneManager implements Listener { // todo: Perhaps refactor events
             playerJoinEvent.getPlayer().getActivePotionEffects().forEach(potionEffect -> playerJoinEvent.getPlayer().removePotionEffect(potionEffect.getType()));
             playerJoinEvent.getPlayer().addPotionEffects(clone.getCloneEntity().getActivePotionEffects());
 
-            playerJoinEvent.getPlayer().getInventory().setItemInMainHand(clone.getCloneEntity().getEquipment().getItemInMainHand());
+//            playerJoinEvent.getPlayer().getInventory().setItemInMainHand(clone.getCloneEntity().getEquipment().getItemInMainHand());
             playerJoinEvent.getPlayer().getInventory().setItemInOffHand(clone.getCloneEntity().getEquipment().getItemInOffHand());
             if (clone.getCloneEntity().hasPotionEffect(PotionEffectType.SLOW) && clone.isCloneHasAI()) {
                 playerJoinEvent.getPlayer().removePotionEffect(PotionEffectType.SLOW);
@@ -239,7 +239,7 @@ public class CloneManager implements Listener { // todo: Perhaps refactor events
         offlinePlayer = new OfflinePlayer(quitPlayer,
                 new ArrayList<>(Arrays.asList(offlinePlayerSpawnEvent.getInventory())),
                 offlinePlayerSpawnEvent.getArmor() == null ? new ArrayList<>() : new ArrayList<>(Arrays.asList(offlinePlayerSpawnEvent.getArmor())),
-                new ItemStack(Material.AIR, 1)/* offlinePlayerSpawnEvent.getMainHand() */, // todo: Figure out a way to pull this from MultiverseInventories without duplicating items.
+                offlinePlayerSpawnEvent.getInventory()[0]/* offlinePlayerSpawnEvent.getMainHand() */, // todo: Figure out a way to pull this from MultiverseInventories without duplicating items.
                 offlinePlayerSpawnEvent.getOffHand());
         offlinePlayer.setSpawnLocation(offlinePlayerSpawnEvent.getLocation());
         offlinePlayer.spawnClone();
