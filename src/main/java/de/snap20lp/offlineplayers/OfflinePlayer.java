@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class OfflinePlayer implements Listener {
 
@@ -37,6 +38,11 @@ public class OfflinePlayer implements Listener {
     private int despawnTask = 0, updateTask = 0;
     private int currentSeconds = 0;
     private boolean isHidden = false;
+
+    /**
+     * This is the id of the clone entity. It is used to update the cloneEntity reference.
+     */
+    private UUID cloneEntityId;
 
     private boolean cloneIsHittable = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.cloneIsHittable"),
             cloneHasAI = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.cloneHasAI"),
@@ -156,6 +162,7 @@ public class OfflinePlayer implements Listener {
     }
 
     public void startTimers() {
+        AtomicInteger integer2 = new AtomicInteger(0);
     updateTask =
         Bukkit.getScheduler()
             .scheduleSyncRepeatingTask(
@@ -167,56 +174,47 @@ public class OfflinePlayer implements Listener {
                           .getConfig()
                           .getInt("OfflinePlayer.cloneSpawnDistance");
                   AtomicBoolean isNearby = new AtomicBoolean(false);
-                  cloneEntity
-                      .getNearbyEntities(distance, distance, distance)
-                      .forEach(
-                          entity -> {
-                            if (entity.getEntityId() != cloneEntity.getEntityId()
-                                && entity.getEntityId()
-                                    != disguisedEntity.getEntity().getEntityId()) {
-
-                              if (entity.getType() == EntityType.PLAYER
-                                  && !entity.getUniqueId().equals(offlinePlayer.getUniqueId())) {
+                    cloneEntity.getNearbyEntities(distance, distance, distance).forEach(entity -> {
+                        if (entity.getEntityId() != cloneEntity.getEntityId()
+                                && entity.getEntityId() != disguisedEntity.getEntity().getEntityId()) {
+                            if (entity.getType() == EntityType.PLAYER && !entity.getUniqueId().equals(offlinePlayer.getUniqueId())) {
+                                System.out.println("Someone is Nearby: (" + integer2.getAndIncrement() + ")");
                                 isNearby.set(true);
-                              } else if (entity instanceof Mob
-                                  && OfflinePlayers.getInstance()
-                                      .getConfig()
-                                      .getBoolean("OfflinePlayer.cloneCanProvoke")) {
-                                if (((Mob) entity).getTarget() == null
-                                    && ((Mob) entity).hasLineOfSight(cloneEntity))
-                                  ((Mob) entity).setTarget(cloneEntity);
-                              }
+                            } else if (entity instanceof Mob && OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.cloneCanProvoke")) {
+                                if (((Mob) entity).getTarget() == null && ((Mob) entity).hasLineOfSight(cloneEntity))
+                                    ((Mob) entity).setTarget(cloneEntity);
                             }
-                          });
+                        }
+                    });
 
-                  if (!isNearby.get() && !isHidden) {
-
-                    OfflinePlayer offlinePlayerClone =
-                    new OfflinePlayer(
-                        offlinePlayer,
-                        currentSeconds,
-                        cloneEntity.getLocation(),
-                        playerExp,
-                        cloneEntity.getHealth(),
-                        savedInventoryContents,
-                        savedArmorContents,
-                        cloneEntity.getEquipment().getItemInMainHand(),
-                        cloneEntity.getEquipment().getItemInOffHand());
-                    offlinePlayerClone.replaceCloneStats(cloneEntity);
-
-                      DisguiseAPI.undisguiseToAll(cloneEntity);
-                      cloneEntity.remove();
-                      despawnClone();
-                      Map<UUID, OfflinePlayer> offlinePlayerList = CloneManager.getInstance().getOfflinePlayerList();
-                      Map<Integer, OfflinePlayer> entityList = CloneManager.getInstance().getEntityOfflinePlayerHashMap();
-                      offlinePlayerList.remove(offlinePlayer.getUniqueId());
-                      entityList.remove(cloneEntity.getEntityId());
-                      cancelUpdateTask();
-                      cancelDespawnTask();
-
-                      offlinePlayerList.put(offlinePlayer.getUniqueId(),offlinePlayerClone);
-                      entityList.put(offlinePlayerClone.getDisguisedEntity().getEntity().getEntityId(), offlinePlayerClone);
-                  }
+//                  if (!isNearby.get()) {
+//
+//                    OfflinePlayer offlinePlayerClone =
+//                    new OfflinePlayer(
+//                        offlinePlayer,
+//                        currentSeconds,
+//                        cloneEntity.getLocation(),
+//                        playerExp,
+//                        cloneEntity.getHealth(),
+//                        savedInventoryContents,
+//                        savedArmorContents,
+//                        cloneEntity.getEquipment().getItemInMainHand(),
+//                        cloneEntity.getEquipment().getItemInOffHand());
+//                    offlinePlayerClone.replaceCloneStats(cloneEntity);
+//
+//                      DisguiseAPI.undisguiseToAll(cloneEntity);
+//                      cloneEntity.remove();
+//                      despawnClone();
+//                      Map<UUID, OfflinePlayer> offlinePlayerList = CloneManager.getInstance().getOfflinePlayerList();
+//                      Map<Integer, OfflinePlayer> entityList = CloneManager.getInstance().getEntityOfflinePlayerHashMap();
+//                      offlinePlayerList.remove(offlinePlayer.getUniqueId());
+//                      entityList.remove(cloneEntity.getEntityId());
+//                      cancelUpdateTask();
+//                      cancelDespawnTask();
+//
+//                      offlinePlayerList.put(offlinePlayer.getUniqueId(),offlinePlayerClone);
+//                      entityList.put(offlinePlayerClone.getDisguisedEntity().getEntity().getEntityId(), offlinePlayerClone);
+//                  }
 
                   if (isNearby.get() && isHidden) {
                     spawnClone();
@@ -268,9 +266,15 @@ public class OfflinePlayer implements Listener {
         cloneEntity.setVisualFire(entity.isVisualFire());
     }
 
+    AtomicInteger integer = new AtomicInteger(0);
+
     public void spawnClone() {
         Entity clone;
         EntityType entityType;
+        System.out.println("Spawned Clone: (" + integer.getAndIncrement() + ")");
+        if (cloneEntity != null)
+            if (cloneEntity.isValid())
+                return;
         try {
             clone = spawnLocation.getWorld().spawnEntity(cloneEntity != null ? cloneEntity.getLocation() : spawnLocation, EntityType.valueOf(OfflinePlayers.getInstance().getConfig().getString("OfflinePlayer.cloneRawEntity")));
         } catch (Exception e) {
@@ -298,7 +302,14 @@ public class OfflinePlayer implements Listener {
             if (player != null) player.getActivePotionEffects().forEach(potionEffect -> ((LivingEntity) clone).addPotionEffect(potionEffect));
             clone.setInvulnerable(!cloneIsHittable);
             clone.setCustomName(customName);
+            if (cloneEntity != null) cloneEntity.remove();
+            if (cloneEntityId != null) {
+                Entity e = Bukkit.getEntity(cloneEntityId);
+                if (e != null) e.remove();
+            }
+            if (disguisedEntity != null) disguisedEntity.removeDisguise();
             this.cloneEntity = (LivingEntity) clone;
+            cloneEntityId = cloneEntity.getUniqueId();
 
             TargetedDisguise targetedDisguise;
 
@@ -323,6 +334,10 @@ public class OfflinePlayer implements Listener {
             targetedDisguise.getWatcher().setPitchLock(spawnLocation.getPitch());
             me.libraryaddict.disguise.DisguiseAPI.disguiseToAll(clone, targetedDisguise);
             disguisedEntity = targetedDisguise;
+//            System.out.println(" ===== Debug Message ===== ");
+//            for (Entity e : cloneEntity.getNearbyEntities(50.0, 50.0, 50.0))
+//                System.out.println(" > " + e.getUniqueId());
+//            System.out.println(" ===== End Debug ====== ");
         }
     }
 

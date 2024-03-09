@@ -3,7 +3,7 @@ plugins {
 }
 
 group 'de.snap20lp.offlineplayers'
-version '3.1.1'
+version '3.1.2'
 
 repositories {
     maven { url = 'https://repo.md-5.net/content/groups/public' }
@@ -47,4 +47,16 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+task testServer () {
+    onlyIf = { true } // Always run.
+    dependsOn ":build"
+    mustRunAfter ":build"
+    doLast {
+        exec {
+            ignoreExitValue = true
+            commandLine "./testing_script.sh"
+        }
+    }
 }
