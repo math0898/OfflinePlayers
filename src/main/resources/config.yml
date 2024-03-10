@@ -35,3 +35,5 @@ OfflinePlayer:
       - CreativeWorld
     is-bed-enabled: true
     destination-world: 'world'
+  death-flavour-messages:
+    - " was killed by "

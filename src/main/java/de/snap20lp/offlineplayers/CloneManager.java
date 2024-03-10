@@ -5,10 +5,7 @@ import de.snap20lp.offlineplayers.events.OfflinePlayerDespawnEvent;
 import de.snap20lp.offlineplayers.events.OfflinePlayerHitEvent;
 import de.snap20lp.offlineplayers.events.OfflinePlayerSpawnEvent;
 import me.libraryaddict.disguise.events.UndisguiseEvent;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -26,10 +23,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffectType;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.UUID;
+import java.text.DecimalFormat;
+import java.util.*;
 import java.util.logging.Level;
 
 /**
@@ -49,9 +44,15 @@ public class CloneManager implements Listener { // todo: Perhaps refactor events
     private final HashMap<Integer, OfflinePlayer> entityOfflinePlayerHashMap = new HashMap<>();
 
     /**
+     * A list of death flavour messages.
+     */
+    private final List<String> deathFlavours;
+
+    /**
      * Creates a new CloneManager by loading, if present, persistent clones from the drive.
      */
     public CloneManager () { // todo: Might be cleaner to use a custom constructor.
+        deathFlavours = OfflinePlayers.getInstance().getConfig().getStringList("OfflinePlayer.death-flavour-messages");
         FileConfiguration save = new YamlConfiguration();
         try {
             save.load("./plugins/OfflinePlayers/clones.yml");
@@ -184,7 +185,7 @@ public class CloneManager implements Listener { // todo: Perhaps refactor events
             playerJoinEvent.getPlayer().getActivePotionEffects().forEach(potionEffect -> playerJoinEvent.getPlayer().removePotionEffect(potionEffect.getType()));
             playerJoinEvent.getPlayer().addPotionEffects(clone.getCloneEntity().getActivePotionEffects());
 
-//            playerJoinEvent.getPlayer().getInventory().setItemInMainHand(clone.getCloneEntity().getEquipment().getItemInMainHand());
+            playerJoinEvent.getPlayer().getInventory().setItemInMainHand(clone.getCloneEntity().getEquipment().getItemInMainHand());
             playerJoinEvent.getPlayer().getInventory().setItemInOffHand(clone.getCloneEntity().getEquipment().getItemInOffHand());
             if (clone.getCloneEntity().hasPotionEffect(PotionEffectType.SLOW) && clone.isCloneHasAI()) {
                 playerJoinEvent.getPlayer().removePotionEffect(PotionEffectType.SLOW);
@@ -207,7 +208,8 @@ public class CloneManager implements Listener { // todo: Perhaps refactor events
                     }
                 });
             }
-
+            clone.cancelDespawnTask();
+            clone.cancelUpdateTask();
             clone.despawnClone();
 
             offlinePlayerList.remove(playerJoinEvent.getPlayer().getUniqueId());
@@ -299,6 +301,11 @@ public class CloneManager implements Listener { // todo: Perhaps refactor events
         }
     }
 
+    private String humanReadableLocation (Location locale) {
+        DecimalFormat format = new DecimalFormat("#.0");
+        return locale.getWorld().getName() + " (" + format.format(locale.getX()) + ", " + format.format(locale.getY()) + ", " + format.format(locale.getZ()) + ")";
+    }
+
     @EventHandler
     public void on(EntityDeathEvent event) {
         OfflinePlayer offlinePlayer = null;
@@ -329,7 +336,14 @@ public class CloneManager implements Listener { // todo: Perhaps refactor events
                 });
 
             }
-
+            Player killer = event.getEntity().getKiller();
+            if (killer != null) {
+                Random rand = new Random();
+                String message = deathFlavours.get(rand.nextInt(deathFlavours.size()));
+                Bukkit.broadcastMessage(ChatColor.RED + "@" + offlinePlayer.getOfflinePlayer().getName()  + message + "@" + killer.getName());
+            } else {
+                Bukkit.broadcastMessage(ChatColor.RED + "@" + offlinePlayer.getOfflinePlayer().getName() + " has died at " + humanReadableLocation(event.getEntity().getLocation()) + ".");
+            }
             event.setDroppedExp(offlinePlayer.getPlayerExp());
             offlinePlayer.setHidden(true);
             offlinePlayer.despawnClone();
