@@ -174,7 +174,7 @@ public class OfflinePlayer implements Listener {
 
     public void startTimers() {
         updateTask = Bukkit.getScheduler().scheduleSyncRepeatingTask(OfflinePlayers.getInstance(), () -> {
-            long startTime = System.nanoTime(); // todo: Remove used for benchmarking performance.
+//            long startTime = System.nanoTime(); // todo: Remove used for benchmarking performance.
             if (isDead) return;
             AtomicBoolean isNearby = new AtomicBoolean(false);
             int entityID = cloneEntity.getEntityId();
@@ -211,11 +211,11 @@ public class OfflinePlayer implements Listener {
                 isHidden = false;
             }
 
-            BigInteger time = BigInteger.valueOf(System.nanoTime() - startTime); // todo: Remove used for benchmarking performance.
-            runs = runs.add(BigInteger.ONE); // todo: Remove used for benchmarking performance.
-            sum = sum.add(time); // todo: Remove used for benchmarking performance.
-            System.out.println("Finished: " + time.divide(BigInteger.valueOf(10000)) + " centimilliseconds"); // todo: Remove used for benchmarking performance.
-            System.out.println("Average: " + (sum.divide(runs.multiply(BigInteger.valueOf(10000)))) + " centimilliseconds"); // todo: Remove used for benchmarking performance.
+//            BigInteger time = BigInteger.valueOf(System.nanoTime() - startTime); // todo: Remove used for benchmarking performance.
+//            runs = runs.add(BigInteger.ONE); // todo: Remove used for benchmarking performance.
+//            sum = sum.add(time); // todo: Remove used for benchmarking performance.
+//            System.out.println("Finished: " + time.divide(BigInteger.valueOf(10000)) + " centimilliseconds"); // todo: Remove used for benchmarking performance.
+//            System.out.println("Average: " + (sum.divide(runs.multiply(BigInteger.valueOf(10000)))) + " centimilliseconds"); // todo: Remove used for benchmarking performance.
         }, 10, cloneUpdateTimer);
 
         if (despawnTimerEnabled) {
