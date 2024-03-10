@@ -18,10 +18,8 @@ import org.bukkit.potion.PotionEffectType;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class OfflinePlayer implements Listener {
 
@@ -183,32 +181,36 @@ public class OfflinePlayer implements Listener {
             int disguiseID = disguisedEntity.getEntity().getEntityId();
             cloneEntity.getNearbyEntities(distance, distance, distance).forEach(entity -> {
                 if (entity.getEntityId() != entityID && entity.getEntityId() != disguiseID) {
-                    if (entity.getType() == EntityType.PLAYER && !cloneEntityId.equals(offlinePlayer.getUniqueId())) isNearby.set(true);
+                    if (entity.getType() == EntityType.PLAYER && !cloneEntityId.equals(offlinePlayer.getUniqueId()))
+                        isNearby.set(true);
                     else if (entity instanceof Mob mob && canProvoke)
-                        if (mob.getTarget() == null && mob.hasLineOfSight(cloneEntity))
-                            mob.setTarget(cloneEntity);
+                        if (mob.getTarget() == null && mob.hasLineOfSight(cloneEntity)) mob.setTarget(cloneEntity);
                 }
             });
 
             if (!isNearby.get()) {
-                OfflinePlayer offlinePlayerClone = new OfflinePlayer(offlinePlayer, currentSeconds, cloneEntity.getLocation(), playerExp, cloneEntity.getHealth(), savedInventoryContents, savedArmorContents,
-                        /*cloneEntity.getEquipment().getItemInMainHand()*/ new ItemStack(Material.AIR, 1), cloneEntity.getEquipment().getItemInOffHand());
-                offlinePlayerClone.replaceCloneStats(cloneEntity);
+//                OfflinePlayer offlinePlayerClone = new OfflinePlayer(offlinePlayer, currentSeconds, cloneEntity.getLocation(), playerExp, cloneEntity.getHealth(), savedInventoryContents, savedArmorContents,
+//                        /*cloneEntity.getEquipment().getItemInMainHand()*/ new ItemStack(Material.AIR, 1), cloneEntity.getEquipment().getItemInOffHand());
+//                offlinePlayerClone.replaceCloneStats(cloneEntity);
 
                 despawnClone();
-                Map<UUID, OfflinePlayer> offlinePlayerList = CloneManager.getInstance().getOfflinePlayerList();
-                Map<Integer, OfflinePlayer> entityList = CloneManager.getInstance().getEntityOfflinePlayerHashMap();
-                offlinePlayerList.remove(offlinePlayer.getUniqueId());
-                entityList.remove(entityID);
-                cancelUpdateTask();
-                cancelDespawnTask();
-
-                offlinePlayerList.put(offlinePlayer.getUniqueId(), offlinePlayerClone);
-                entityList.put(offlinePlayerClone.getDisguisedEntity().getEntity().getEntityId(), offlinePlayerClone);
+//                Map<UUID, OfflinePlayer> offlinePlayerList = CloneManager.getInstance().getOfflinePlayerList();
+//                Map<Integer, OfflinePlayer> entityList = CloneManager.getInstance().getEntityOfflinePlayerHashMap();
+//                offlinePlayerList.remove(offlinePlayer.getUniqueId());
+//                entityList.remove(entityID);
+//                cancelUpdateTask();
+//                cancelDespawnTask();
+//                spawnClone();
+//                despawnClone();
+                isHidden = true;
+//                startTimers();
+//                offlinePlayerList.put(offlinePlayer.getUniqueId(), offlinePlayerClone);
+//                entityList.put(offlinePlayerClone.getDisguisedEntity().getEntity().getEntityId(), offlinePlayerClone);
             } else if (isNearby.get() && isHidden) {
                 spawnClone();
                 isHidden = false;
             }
+
             BigInteger time = BigInteger.valueOf(System.nanoTime() - startTime); // todo: Remove used for benchmarking performance.
             runs = runs.add(BigInteger.ONE); // todo: Remove used for benchmarking performance.
             sum = sum.add(time); // todo: Remove used for benchmarking performance.
@@ -329,9 +331,12 @@ public class OfflinePlayer implements Listener {
     public void despawnClone() {
         if (cloneEntity != null) {
             DisguiseAPI.undisguiseToAll(cloneEntity);
+            disguisedEntity.removeDisguise();
             cloneEntity.remove();
-            cancelUpdateTask();
-            cloneEntity.remove();
+            if (cloneEntityId != null) {
+                Entity e = Bukkit.getEntity(cloneEntityId);
+                if (e != null) e.remove();
+            }
         }
     }
 
