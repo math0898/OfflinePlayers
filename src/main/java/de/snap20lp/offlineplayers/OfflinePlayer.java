@@ -273,7 +273,7 @@ public class OfflinePlayer implements Listener {
             ((LivingEntity) clone).getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(cloneEntity == null ? currentHP : cloneEntity.getHealth());
             ((LivingEntity) clone).setHealth(cloneEntity == null ? currentHP : cloneEntity.getHealth());
             ((LivingEntity) clone).getEquipment().setArmorContents(cloneEntity == null ? savedArmorContents.toArray(new ItemStack[0]) : cloneEntity.getEquipment().getArmorContents());
-//            ((LivingEntity) clone).getEquipment().setItemInMainHand(cloneEntity == null ? mainHand : cloneEntity.getEquipment().getItemInMainHand());
+            ((LivingEntity) clone).getEquipment().setItemInMainHand(cloneEntity == null ? mainHand : cloneEntity.getEquipment().getItemInMainHand());
             ((LivingEntity) clone).getEquipment().setItemInOffHand(cloneEntity == null ? offHand : cloneEntity.getEquipment().getItemInOffHand());
             org.bukkit.entity.Player player = offlinePlayer.getPlayer();
             if (player != null)
