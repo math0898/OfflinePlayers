@@ -171,8 +171,8 @@ public class OfflinePlayer implements Listener {
     }
 
     // todo: Remove used for benchmarking performance.
-    BigInteger sum = BigInteger.ZERO;
-    BigInteger runs = BigInteger.ONE;
+    static BigInteger sum = BigInteger.ZERO;
+    static BigInteger runs = BigInteger.ONE;
 
     public void startTimers() {
         updateTask = Bukkit.getScheduler().scheduleSyncRepeatingTask(OfflinePlayers.getInstance(), () -> {
@@ -220,8 +220,9 @@ public class OfflinePlayer implements Listener {
             }
             BigInteger time = BigInteger.valueOf(System.nanoTime() - startTime); // todo: Remove used for benchmarking performance.
             runs = runs.add(BigInteger.ONE); // todo: Remove used for benchmarking performance.
-            System.out.println("Finished: " + time + "ns"); // todo: Remove used for benchmarking performance.
-            System.out.println("Average: " + (sum.divide(runs)) + "ns"); // todo: Remove used for benchmarking performance.
+            sum = sum.add(time); // todo: Remove used for benchmarking performance.
+            System.out.println("Finished: " + time.divide(BigInteger.valueOf(10000)) + "centimilliseconds"); // todo: Remove used for benchmarking performance.
+            System.out.println("Average: " + (sum.divide(runs.multiply(BigInteger.valueOf(10000)))) + "centimilliseconds"); // todo: Remove used for benchmarking performance.
         }, 10, cloneUpdateTimer);
 
         if (despawnTimerEnabled) {
