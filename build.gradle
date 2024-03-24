@@ -43,6 +43,7 @@ dependencies {
     compileOnly 'com.palmergames.bukkit.towny:towny:0.100.1.18'
     compileOnly 'com.onarandombox.multiverseinventories:multiverse-inventories:4.2.5'
     compileOnly 'com.onarandombox.multiversecore:multiverse-core:4.3.12'
+    compileOnly 'com.gitlab.redstonerevive:Departed-Depot:1.1.0-ALPHA'
 }
 
 test {

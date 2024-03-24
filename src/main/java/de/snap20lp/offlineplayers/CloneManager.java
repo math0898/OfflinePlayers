@@ -6,6 +6,8 @@ import de.snap20lp.offlineplayers.events.OfflinePlayerHitEvent;
 import de.snap20lp.offlineplayers.events.OfflinePlayerSpawnEvent;
 import me.libraryaddict.disguise.events.UndisguiseEvent;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -181,30 +183,35 @@ public class CloneManager implements Listener { // todo: Perhaps refactor events
 
             OfflinePlayerDespawnEvent offlinePlayerDespawnEvent = new OfflinePlayerDespawnEvent(clone);
             Bukkit.getPluginManager().callEvent(offlinePlayerDespawnEvent);
-            playerJoinEvent.getPlayer().teleport(clone.getCloneEntity().getLocation());
-            playerJoinEvent.getPlayer().getActivePotionEffects().forEach(potionEffect -> playerJoinEvent.getPlayer().removePotionEffect(potionEffect.getType()));
-            playerJoinEvent.getPlayer().addPotionEffects(clone.getCloneEntity().getActivePotionEffects());
+            Player player = playerJoinEvent.getPlayer();
+            player.teleport(clone.getCloneEntity().getLocation());
+            player.getActivePotionEffects().forEach(potionEffect -> player.removePotionEffect(potionEffect.getType()));
+            player.addPotionEffects(clone.getCloneEntity().getActivePotionEffects());
 
-            playerJoinEvent.getPlayer().getInventory().setItemInMainHand(clone.getCloneEntity().getEquipment().getItemInMainHand());
-            playerJoinEvent.getPlayer().getInventory().setItemInOffHand(clone.getCloneEntity().getEquipment().getItemInOffHand());
+//            player.getInventory().setItemInMainHand(clone.getCloneEntity().getEquipment().getItemInMainHand());
+            player.getInventory().setItemInOffHand(clone.getCloneEntity().getEquipment().getItemInOffHand());
             if (clone.getCloneEntity().hasPotionEffect(PotionEffectType.SLOW) && clone.isCloneHasAI()) {
-                playerJoinEvent.getPlayer().removePotionEffect(PotionEffectType.SLOW);
+                player.removePotionEffect(PotionEffectType.SLOW);
             }
             if (clone.isDead()) {
                 if (!OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.cloneKeepItems")) {
-                    if (playerJoinEvent.getPlayer().getEquipment() != null) {
-                        playerJoinEvent.getPlayer().getEquipment().clear();
+                    if (player.getEquipment() != null) {
+                        player.getEquipment().clear();
                     }
                 }
-                playerJoinEvent.getPlayer().setLevel(0);
-                playerJoinEvent.getPlayer().setExp(0.0f);
-                playerJoinEvent.getPlayer().setHealth(0.0d);
+                player.setLevel(0);
+                player.setExp(0.0f);
+                player.setHealth(0.0d);
             } else {
-                playerJoinEvent.getPlayer().setFireTicks(clone.getCloneEntity().getFireTicks());
-                playerJoinEvent.getPlayer().setHealth(clone.getCloneEntity().getHealth());
+                player.setFireTicks(clone.getCloneEntity().getFireTicks());
+                AttributeInstance attributeInstance = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+                double maxHealth = 20.0;
+                if (attributeInstance != null)
+                    maxHealth = attributeInstance.getValue();
+                player.setHealth(Math.min(clone.getCloneEntity().getHealth(), maxHealth));
                 clone.getAddedItems().forEach(itemStack -> {
                     if (itemStack != null) {
-                        playerJoinEvent.getPlayer().getInventory().addItem(itemStack);
+                        player.getInventory().addItem(itemStack);
                     }
                 });
             }

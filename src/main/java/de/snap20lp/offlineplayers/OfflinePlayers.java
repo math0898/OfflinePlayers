@@ -54,6 +54,7 @@ public class OfflinePlayers extends JavaPlugin { // todo: Maybe create a config 
             multiverseInventoriesAPI = (MultiverseInventories) Bukkit.getPluginManager().getPlugin("Multiverse-Inventories");
         Bukkit.getPluginManager().registerEvents(CloneManager.getInstance(), this);
         Bukkit.getPluginManager().registerEvents(new MortalMaker(), this);
+        Bukkit.getPluginManager().registerEvents(new DepartedDepotIntegration(), this);
         if (getServer().getPluginManager().getPlugin("LibsDisguises") == null || getServer().getPluginManager().getPlugin("ProtocolLib") == null) {
             Bukkit.getConsoleSender().sendMessage("§4[OfflinePlayers] ERROR: LibsDisguises is not activated! Please install LibsDisguises and ProtocolLib to use this plugin!");
             Bukkit.getPluginManager().disablePlugin(this);
