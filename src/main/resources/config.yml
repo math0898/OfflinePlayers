@@ -37,3 +37,7 @@ OfflinePlayer:
     destination-world: 'world'
   death-flavour-messages:
     - " was killed by "
+  event-protector:
+    # Players in protected WorldGuard will be brought to their 'Bed Spawn > Towny Spawn > (Overworld: 'world') World Spawn'
+    is-bed-enabled: true
+    destination-world: 'world'
