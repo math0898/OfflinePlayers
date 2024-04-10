@@ -2,6 +2,9 @@ package de.snap20lp.offlineplayers;
 
 import com.onarandombox.multiverseinventories.MultiverseInventories;
 import com.palmergames.bukkit.towny.TownyAPI;
+import com.sk89q.worldguard.WorldGuard;
+import com.sk89q.worldguard.protection.flags.StateFlag;
+import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.data.BlockData;
@@ -43,6 +46,18 @@ public class OfflinePlayers extends JavaPlugin { // todo: Maybe create a config 
         return multiverseInventoriesAPI;
     }
 
+    /**
+     * Called extra early on in the plugin loading process. Used to register WorldGuard flags.
+     */
+    public void onLoad () {
+        try {
+            FlagRegistry registry = WorldGuard.getInstance().getFlagRegistry();
+            StateFlag flag = new StateFlag("ban-offline-players", false);
+            registry.register(flag);
+            EventProtector.BAN_OFFLINE_PLAYERS = flag;
+        } catch (Exception ignored) { }
+    }
+
     @Override
     public void onEnable() {
         this.metrics = new Metrics(this, 19973);
@@ -54,7 +69,8 @@ public class OfflinePlayers extends JavaPlugin { // todo: Maybe create a config 
             multiverseInventoriesAPI = (MultiverseInventories) Bukkit.getPluginManager().getPlugin("Multiverse-Inventories");
         Bukkit.getPluginManager().registerEvents(CloneManager.getInstance(), this);
         Bukkit.getPluginManager().registerEvents(new MortalMaker(), this);
-        Bukkit.getPluginManager().registerEvents(new EventProtector(), this);
+        if (Bukkit.getPluginManager().isPluginEnabled("WorldGuard"))
+            Bukkit.getPluginManager().registerEvents(new EventProtector(), this);
         Bukkit.getPluginManager().registerEvents(new DepartedDepotIntegration(), this);
         if (getServer().getPluginManager().getPlugin("LibsDisguises") == null || getServer().getPluginManager().getPlugin("ProtocolLib") == null) {
             Bukkit.getConsoleSender().sendMessage("§4[OfflinePlayers] ERROR: LibsDisguises is not activated! Please install LibsDisguises and ProtocolLib to use this plugin!");

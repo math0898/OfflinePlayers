@@ -41,14 +41,9 @@ public class EventProtector implements Listener {
     private final String destinationWorld;
 
     /**
-     * Whether WorldGuard is present on the server.
-     */
-    private final boolean worldGuard;
-
-    /**
      * This is the instance of the custom flag that we need in order to query its value.
      */
-    private final StateFlag BAN_OFFLINE_PLAYERS;
+    public static StateFlag BAN_OFFLINE_PLAYERS;
 
     /**
      * Creates a new MortalMaker and loads config file values.
@@ -57,13 +52,6 @@ public class EventProtector implements Listener {
         FileConfiguration config = OfflinePlayers.getInstance().getConfig();
         isBedEnabled = config.getBoolean("OfflinePlayer.event-protector.is-bed-enabled", false);
         destinationWorld = config.getString("OfflinePlayer.event-protector.destination-world", "world");
-        worldGuard = Bukkit.getPluginManager().isPluginEnabled("WorldGuard");
-        if (worldGuard) {
-            FlagRegistry registry = WorldGuard.getInstance().getFlagRegistry();
-            StateFlag flag = new StateFlag("ban-offline-players", false);
-            registry.register(flag);
-            BAN_OFFLINE_PLAYERS = flag;
-        } else BAN_OFFLINE_PLAYERS = null;
     }
 
     /**
@@ -73,7 +61,6 @@ public class EventProtector implements Listener {
      */
     @EventHandler
     public void onCloneSpawn (OfflinePlayerSpawnEvent event) {
-        if (!worldGuard) return;
         Location location = event.getLocation();
         World w = location.getWorld();
         if (w == null) return;
