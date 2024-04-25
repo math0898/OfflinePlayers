@@ -6,17 +6,11 @@ import com.onarandombox.multiverseinventories.share.Sharables;
 import com.palmergames.bukkit.towny.TownyAPI;
 import com.palmergames.bukkit.towny.exceptions.TownyException;
 import com.palmergames.bukkit.towny.object.Town;
-import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import com.sk89q.worldguard.WorldGuard;
-import com.sk89q.worldguard.protection.ApplicableRegionSet;
-import com.sk89q.worldguard.protection.flags.StateFlag;
-import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
-import com.sk89q.worldguard.protection.regions.RegionContainer;
-import com.sk89q.worldguard.protection.regions.RegionQuery;
+import de.snap20lp.offlineplayers.depends.APIManager;
+import de.snap20lp.offlineplayers.depends.WorldGuardFacade;
 import de.snap20lp.offlineplayers.events.OfflinePlayerSpawnEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -41,11 +35,6 @@ public class EventProtector implements Listener {
     private final String destinationWorld;
 
     /**
-     * This is the instance of the custom flag that we need in order to query its value.
-     */
-    public static StateFlag BAN_OFFLINE_PLAYERS;
-
-    /**
      * Creates a new MortalMaker and loads config file values.
      */
     public EventProtector () {
@@ -60,14 +49,10 @@ public class EventProtector implements Listener {
      * @param event The OfflinePlayerSpawnEvent.
      */
     @EventHandler
-    public void onCloneSpawn (OfflinePlayerSpawnEvent event) {
-        Location location = event.getLocation();
-        World w = location.getWorld();
-        if (w == null) return;
-        RegionContainer container = WorldGuard.getInstance().getPlatform().getRegionContainer();
-        RegionQuery query = container.createQuery();
-        ApplicableRegionSet set = query.getApplicableRegions(BukkitAdapter.adapt(location));
-        if (set.testState(null, BAN_OFFLINE_PLAYERS)) {
+    public void onCloneSpawn(OfflinePlayerSpawnEvent event) {
+        WorldGuardFacade wg = APIManager.getInstance().getWorldGuard();
+        if (wg == null) return;
+        if (wg.testFlag(event.getLocation())) {
             Location spawn = null;
             if (isBedEnabled) spawn = event.getOfflinePlayer().getOfflinePlayer().getBedSpawnLocation();
             TownyAPI api = OfflinePlayers.getTownyAPI();
@@ -76,7 +61,8 @@ public class EventProtector implements Listener {
                 if (town != null) {
                     try {
                         spawn = town.getSpawn();
-                    } catch (TownyException ignored) { }
+                    } catch (TownyException ignored) {
+                    }
                 }
             }
             if (spawn == null) spawn = Bukkit.getWorld(destinationWorld).getSpawnLocation();
