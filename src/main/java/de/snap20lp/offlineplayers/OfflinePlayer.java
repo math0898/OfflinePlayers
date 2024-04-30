@@ -265,10 +265,8 @@ public class OfflinePlayer implements Listener {
             if (clone instanceof Ageable) ((Ageable) clone).setAdult();
             clone.setSilent(true);
 
-            if (cloneHasAI) {
-                ((LivingEntity) clone).setAI(true);
-                ((LivingEntity) clone).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, Integer.MAX_VALUE, 255, false, false, false));
-            }
+            ((LivingEntity) clone).setAI(cloneHasAI);
+            if (cloneHasAI) ((LivingEntity) clone).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, Integer.MAX_VALUE, 255, false, false, false));
             clone.setGravity(true);
             ((LivingEntity) clone).getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(cloneEntity == null ? currentHP : cloneEntity.getHealth());
             ((LivingEntity) clone).setHealth(cloneEntity == null ? currentHP : cloneEntity.getHealth());
