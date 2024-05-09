@@ -15,3 +15,5 @@ gradle/wrapper/gradle-wrapper.properties
 gradlew
 gradlew.bat
 testing_script.sh
+.gitignore
+.idea/

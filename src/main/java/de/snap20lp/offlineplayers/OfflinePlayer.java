@@ -16,8 +16,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -49,6 +49,13 @@ public class OfflinePlayer implements Listener {
     private boolean isDead = false;
     private static final boolean despawnTimerEnabled = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.cloneDe-spawnTimer.enabled");
     private static final boolean isBlockEntity = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.useBlockEntity");
+
+    private static final int distance = OfflinePlayers.getInstance().getConfig().getInt("OfflinePlayer.cloneSpawnDistance");
+
+    private static final boolean canProvoke = OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.cloneCanProvoke");
+
+    private static final int cloneUpdateTimer = OfflinePlayers.getInstance().getConfig().getInt("OfflinePlayer.cloneUpdateTimer");
+
     private LivingEntity cloneEntity;
     private TargetedDisguise disguisedEntity;
 
@@ -161,51 +168,55 @@ public class OfflinePlayer implements Listener {
         this.spawnLocation = val;
     }
 
+    // todo: Remove used for benchmarking performance.
+    static BigInteger sum = BigInteger.ZERO;
+    static BigInteger runs = BigInteger.ONE;
+
     public void startTimers() {
         updateTask = Bukkit.getScheduler().scheduleSyncRepeatingTask(OfflinePlayers.getInstance(), () -> {
+//            long startTime = System.nanoTime(); // todo: Remove used for benchmarking performance.
             if (isDead) return;
-            int distance = OfflinePlayers.getInstance().getConfig().getInt("OfflinePlayer.cloneSpawnDistance");
             AtomicBoolean isNearby = new AtomicBoolean(false);
+            int entityID = cloneEntity.getEntityId();
+            int disguiseID = disguisedEntity.getEntity().getEntityId();
             cloneEntity.getNearbyEntities(distance, distance, distance).forEach(entity -> {
-                if (entity.getEntityId() != cloneEntity.getEntityId() && entity.getEntityId() != disguisedEntity.getEntity().getEntityId()) {
-                    if (entity.getType() == EntityType.PLAYER && !entity.getUniqueId().equals(offlinePlayer.getUniqueId())) {
+                if (entity.getEntityId() != entityID && entity.getEntityId() != disguiseID) {
+                    if (entity.getType() == EntityType.PLAYER && !cloneEntityId.equals(offlinePlayer.getUniqueId()))
                         isNearby.set(true);
-                    } else if (entity instanceof Mob && OfflinePlayers.getInstance().getConfig().getBoolean("OfflinePlayer.cloneCanProvoke")) {
-                        if (((Mob) entity).getTarget() == null && ((Mob) entity).hasLineOfSight(cloneEntity))
-                            ((Mob) entity).setTarget(cloneEntity);
-                    }
+                    else if (entity instanceof Mob mob && canProvoke)
+                        if (mob.getTarget() == null && mob.hasLineOfSight(cloneEntity)) mob.setTarget(cloneEntity);
                 }
             });
 
             if (!isNearby.get()) {
+//                OfflinePlayer offlinePlayerClone = new OfflinePlayer(offlinePlayer, currentSeconds, cloneEntity.getLocation(), playerExp, cloneEntity.getHealth(), savedInventoryContents, savedArmorContents,
+//                        /*cloneEntity.getEquipment().getItemInMainHand()*/ new ItemStack(Material.AIR, 1), cloneEntity.getEquipment().getItemInOffHand());
+//                offlinePlayerClone.replaceCloneStats(cloneEntity);
 
-                OfflinePlayer offlinePlayerClone = new OfflinePlayer(offlinePlayer, currentSeconds, cloneEntity.getLocation(), playerExp, cloneEntity.getHealth(), savedInventoryContents, savedArmorContents,
-                        /*cloneEntity.getEquipment().getItemInMainHand()*/ new ItemStack(Material.AIR, 1), cloneEntity.getEquipment().getItemInOffHand());
-                offlinePlayerClone.replaceCloneStats(cloneEntity);
-
-                DisguiseAPI.undisguiseToAll(cloneEntity);
-                cloneEntity.remove();
                 despawnClone();
-                Map<UUID, OfflinePlayer> offlinePlayerList = CloneManager.getInstance().getOfflinePlayerList();
-                Map<Integer, OfflinePlayer> entityList = CloneManager.getInstance().getEntityOfflinePlayerHashMap();
-                offlinePlayerList.remove(offlinePlayer.getUniqueId());
-                if (cloneEntityId != null) {
-                    Entity e = Bukkit.getEntity(cloneEntityId);
-                    if (e != null) e.remove();
-                }
-                entityList.remove(cloneEntity.getEntityId());
-                cancelUpdateTask();
-                cancelDespawnTask();
-
-                offlinePlayerList.put(offlinePlayer.getUniqueId(), offlinePlayerClone);
-                entityList.put(offlinePlayerClone.getDisguisedEntity().getEntity().getEntityId(), offlinePlayerClone);
-            }
-
-            if (isNearby.get() && isHidden) {
+//                Map<UUID, OfflinePlayer> offlinePlayerList = CloneManager.getInstance().getOfflinePlayerList();
+//                Map<Integer, OfflinePlayer> entityList = CloneManager.getInstance().getEntityOfflinePlayerHashMap();
+//                offlinePlayerList.remove(offlinePlayer.getUniqueId());
+//                entityList.remove(entityID);
+//                cancelUpdateTask();
+//                cancelDespawnTask();
+//                spawnClone();
+//                despawnClone();
+                isHidden = true;
+//                startTimers();
+//                offlinePlayerList.put(offlinePlayer.getUniqueId(), offlinePlayerClone);
+//                entityList.put(offlinePlayerClone.getDisguisedEntity().getEntity().getEntityId(), offlinePlayerClone);
+            } else if (isNearby.get() && isHidden) {
                 spawnClone();
                 isHidden = false;
             }
-        }, 10, OfflinePlayers.getInstance().getConfig().getInt("OfflinePlayer.cloneUpdateTimer"));
+
+//            BigInteger time = BigInteger.valueOf(System.nanoTime() - startTime); // todo: Remove used for benchmarking performance.
+//            runs = runs.add(BigInteger.ONE); // todo: Remove used for benchmarking performance.
+//            sum = sum.add(time); // todo: Remove used for benchmarking performance.
+//            System.out.println("Finished: " + time.divide(BigInteger.valueOf(10000)) + " centimilliseconds"); // todo: Remove used for benchmarking performance.
+//            System.out.println("Average: " + (sum.divide(runs.multiply(BigInteger.valueOf(10000)))) + " centimilliseconds"); // todo: Remove used for benchmarking performance.
+        }, 10, cloneUpdateTimer);
 
         if (despawnTimerEnabled) {
             despawnTask = Bukkit.getScheduler().scheduleSyncRepeatingTask(OfflinePlayers.getInstance(), new Runnable() {
@@ -317,8 +328,13 @@ public class OfflinePlayer implements Listener {
 
     public void despawnClone() {
         if (cloneEntity != null) {
-            cancelUpdateTask();
+            DisguiseAPI.undisguiseToAll(cloneEntity);
+            disguisedEntity.removeDisguise();
             cloneEntity.remove();
+            if (cloneEntityId != null) {
+                Entity e = Bukkit.getEntity(cloneEntityId);
+                if (e != null) e.remove();
+            }
         }
     }
 

@@ -1,7 +1,6 @@
 package de.snap20lp.offlineplayers;
 
-import com.onarandombox.multiverseinventories.MultiverseInventories;
-import com.palmergames.bukkit.towny.TownyAPI;
+import de.snap20lp.offlineplayers.depends.APIManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.data.BlockData;
@@ -16,31 +15,10 @@ public class OfflinePlayers extends JavaPlugin { // todo: Maybe create a config 
     }
 
     /**
-     * The active Towny api instance.
+     * Called extra early on in the plugin loading process. Used to register WorldGuard flags.
      */
-    private static TownyAPI townyAPI;
-
-    /**
-     * The active Multiverse-Inventories instance.
-     */
-    private static MultiverseInventories multiverseInventoriesAPI;
-
-    /**
-     * Accessor method for the towny api. No promises to not provide null.
-     *
-     * @return The Towny API.
-     */
-    public static TownyAPI getTownyAPI () {
-        return townyAPI;
-    } // todo: Group APIs into an API manager.
-
-    /**
-     * Accessor method for the MultiverseInventories api. No promises to not provide null.
-     *
-     * @return The MultiverseInventories API.
-     */
-    public static MultiverseInventories getMultiverseInventoriesAPI () {
-        return multiverseInventoriesAPI;
+    public void onLoad () {
+        APIManager.getInstance().delegatedOnLoad();
     }
 
     @Override
@@ -48,12 +26,11 @@ public class OfflinePlayers extends JavaPlugin { // todo: Maybe create a config 
         this.metrics = new Metrics(this, 19973);
         Bukkit.getConsoleSender().sendMessage("§aOfflinePlayers starting in version " + getDescription().getVersion());
         this.saveDefaultConfig();
-        if (Bukkit.getPluginManager().isPluginEnabled("Towny"))
-            townyAPI = TownyAPI.getInstance();
-        if (Bukkit.getPluginManager().isPluginEnabled("Multiverse-Inventories"))
-            multiverseInventoriesAPI = (MultiverseInventories) Bukkit.getPluginManager().getPlugin("Multiverse-Inventories");
+        APIManager.getInstance().delegatedOnEnabled();
         Bukkit.getPluginManager().registerEvents(CloneManager.getInstance(), this);
         Bukkit.getPluginManager().registerEvents(new MortalMaker(), this);
+        if (Bukkit.getPluginManager().isPluginEnabled("WorldGuard"))
+            Bukkit.getPluginManager().registerEvents(new EventProtector(), this);
         if (getServer().getPluginManager().getPlugin("LibsDisguises") == null || getServer().getPluginManager().getPlugin("ProtocolLib") == null) {
             Bukkit.getConsoleSender().sendMessage("§4[OfflinePlayers] ERROR: LibsDisguises is not activated! Please install LibsDisguises and ProtocolLib to use this plugin!");
             Bukkit.getPluginManager().disablePlugin(this);

@@ -1,18 +1,14 @@
 package de.snap20lp.offlineplayers;
 
-import com.onarandombox.multiverseinventories.MultiverseInventories;
-import com.onarandombox.multiverseinventories.profile.PlayerProfile;
-import com.onarandombox.multiverseinventories.share.Sharables;
-import com.palmergames.bukkit.towny.TownyAPI;
-import com.palmergames.bukkit.towny.exceptions.TownyException;
-import com.palmergames.bukkit.towny.object.Town;
+import de.snap20lp.offlineplayers.depends.APIManager;
+import de.snap20lp.offlineplayers.depends.MultiverseInventoriesFacade;
+import de.snap20lp.offlineplayers.depends.TownyFacade;
 import de.snap20lp.offlineplayers.events.OfflinePlayerSpawnEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 
@@ -64,27 +60,12 @@ public class MortalMaker implements Listener {
                         spawn = null;
 
             }
-            TownyAPI api = OfflinePlayers.getTownyAPI();
-            if (api != null && spawn == null) {
-                Town town = api.getTown(event.getOfflinePlayer().getOfflinePlayer().getPlayer());
-                if (town != null) {
-                    try {
-                        spawn = town.getSpawn();
-                    } catch (TownyException ignored) { }
-                }
-            }
+            TownyFacade towny = APIManager.getInstance().getTownyFacade();
+            if (towny != null && spawn == null) spawn = towny.grabTownSpawn(event.getOfflinePlayer().getOfflinePlayer().getPlayer());
             if (spawn == null) spawn = Bukkit.getWorld(destinationWorld).getSpawnLocation();
             event.setLocation(spawn);
-            MultiverseInventories multiInvAPI = OfflinePlayers.getMultiverseInventoriesAPI();
-            if (multiInvAPI != null) {
-                PlayerProfile profile = multiInvAPI.getGroupManager().getGroupsForWorld(spawn.getWorld().getName()).get(0).getGroupProfileContainer().getPlayerData(event.getOfflinePlayer().getOfflinePlayer().getPlayer());
-                ItemStack[] inv = profile.get(Sharables.INVENTORY);
-                ItemStack[] armor = profile.get(Sharables.ARMOR);
-                ItemStack offHand = profile.get(Sharables.OFF_HAND);
-                event.setInventory(inv);
-                event.setArmor(armor);
-                event.setOffHand(offHand);
-            }
+            MultiverseInventoriesFacade multiverseInventoriesFacade = APIManager.getInstance().getMultiverseInventoriesFacade();
+            if (multiverseInventoriesFacade != null) multiverseInventoriesFacade.updateInventory(event);
         }
     }
 }
