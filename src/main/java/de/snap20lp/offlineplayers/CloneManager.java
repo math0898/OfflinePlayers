@@ -226,6 +226,7 @@ public class CloneManager implements Listener { // todo: Perhaps refactor events
     @EventHandler
     public void on(PlayerQuitEvent playerQuitEvent) {
         Player quitPlayer = playerQuitEvent.getPlayer();
+        if (quitPlayer.getHealth() <= 0) return;
         FileConfiguration config = OfflinePlayers.getInstance().getConfig();
         if (config.getStringList("OfflinePlayer.worldBlacklist").contains(quitPlayer.getWorld().getName())) return;
         if (config.getStringList("OfflinePlayer.game-modeBlacklist").contains(quitPlayer.getGameMode().name())) return;
