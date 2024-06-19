@@ -34,7 +34,10 @@ public class DepartedDepotIntegration implements Listener {
             departedDepot = (DepartedDepot) Bukkit.getPluginManager().getPlugin("DepartedDepot");
             OfflinePlayers.getInstance().getLogger().log(Level.INFO, "We have located Departed Depot. OfflinePlayers will spawn graves on death.");
         }
-        else departedDepot = null;
+        else {
+            departedDepot = null;
+            throw new NoClassDefFoundError();
+        }
     }
 
     /**

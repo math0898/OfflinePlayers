@@ -17,3 +17,4 @@ gradlew.bat
 testing_script.sh
 .gitignore
 .idea/
+libs/

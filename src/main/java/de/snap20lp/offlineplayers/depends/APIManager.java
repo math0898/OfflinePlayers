@@ -62,6 +62,7 @@ public class APIManager {
      * Called when onEnable() is executed for OfflinePlayers.
      */
     public void delegatedOnEnabled () {
+        System.out.println("Warn me!");
         try {
             townyFacade = new TownyFacade();
         } catch (NoClassDefFoundError error) {

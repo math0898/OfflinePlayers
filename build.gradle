@@ -41,6 +41,7 @@ dependencies {
     implementation 'LibsDisguises:LibsDisguises:10.0.37'
     implementation 'com.comphenix.protocol:ProtocolLib:5.0.0'
     implementation 'com.google.code.gson:gson:2.10.1'
+    compileOnly files('libs/Graves-4.9.1.6.jar')
     compileOnly 'com.palmergames.bukkit.towny:towny:0.100.1.18'
     compileOnly 'com.onarandombox.multiverseinventories:multiverse-inventories:4.2.5'
     compileOnly 'com.onarandombox.multiversecore:multiverse-core:4.3.12'
