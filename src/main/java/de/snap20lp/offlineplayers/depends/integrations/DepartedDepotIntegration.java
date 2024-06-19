@@ -1,8 +1,10 @@
-package de.snap20lp.offlineplayers;
+package de.snap20lp.offlineplayers.depends.integrations;
 
 import com.gitlab.redstonerevive.departeddepot.DepartedDepot;
 import com.gitlab.redstonerevive.departeddepot.Depot;
 import com.gitlab.redstonerevive.departeddepot.DepotManager;
+import de.snap20lp.offlineplayers.OfflinePlayer;
+import de.snap20lp.offlineplayers.OfflinePlayers;
 import de.snap20lp.offlineplayers.events.OfflinePlayerDeathEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
@@ -31,10 +33,8 @@ public class DepartedDepotIntegration implements Listener {
         if (Bukkit.getPluginManager().isPluginEnabled("DepartedDepot")) {
             departedDepot = (DepartedDepot) Bukkit.getPluginManager().getPlugin("DepartedDepot");
             OfflinePlayers.getInstance().getLogger().log(Level.INFO, "We have located Departed Depot. OfflinePlayers will spawn graves on death.");
-        } else {
-            OfflinePlayers.getInstance().getLogger().log(Level.WARNING, "We could not locate DepartedDepot. Clones will not spawn graves. Everything else should be fine.");
-            departedDepot = null;
         }
+        else departedDepot = null;
     }
 
     /**
