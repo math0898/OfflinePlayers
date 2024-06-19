@@ -3,7 +3,6 @@ package de.snap20lp.offlineplayers.depends;
 import com.palmergames.bukkit.towny.TownyAPI;
 import com.palmergames.bukkit.towny.exceptions.TownyException;
 import com.palmergames.bukkit.towny.object.Town;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -24,7 +23,7 @@ public class TownyFacade {
      * Creates a new TownyFacade by grabbing the TownyAPI.
      */
     public TownyFacade () {
-        townyAPI = (TownyAPI) Bukkit.getPluginManager().getPlugin("Towny");
+        townyAPI = TownyAPI.getInstance();
     }
 
     /**

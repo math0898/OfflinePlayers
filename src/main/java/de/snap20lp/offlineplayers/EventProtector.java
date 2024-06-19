@@ -1,11 +1,5 @@
 package de.snap20lp.offlineplayers;
 
-import com.onarandombox.multiverseinventories.MultiverseInventories;
-import com.onarandombox.multiverseinventories.profile.PlayerProfile;
-import com.onarandombox.multiverseinventories.share.Sharables;
-import com.palmergames.bukkit.towny.TownyAPI;
-import com.palmergames.bukkit.towny.exceptions.TownyException;
-import com.palmergames.bukkit.towny.object.Town;
 import de.snap20lp.offlineplayers.depends.APIManager;
 import de.snap20lp.offlineplayers.depends.MultiverseInventoriesFacade;
 import de.snap20lp.offlineplayers.depends.TownyFacade;
@@ -16,7 +10,6 @@ import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.inventory.ItemStack;
 
 /**
  * The Event Protector module prevents players from accidentally leaving their offline player in a WorldGuard protected
