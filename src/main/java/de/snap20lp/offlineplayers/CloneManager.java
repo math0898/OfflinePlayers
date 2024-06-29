@@ -259,7 +259,7 @@ public class CloneManager implements Listener { // todo: Perhaps refactor events
         entityOfflinePlayerHashMap.put(offlinePlayer.getCloneEntity().getEntityId(), offlinePlayer);
     }
 
-    @EventHandler
+    @EventHandler // todo: Figure out why this method existed. It seems relatively vestigial to me currently.
     public void on(UndisguiseEvent undisguiseEvent) {
         if(entityOfflinePlayerHashMap.containsKey(undisguiseEvent.getEntity().getEntityId())) {
             OfflinePlayer offlinePlayer = entityOfflinePlayerHashMap.get(undisguiseEvent.getEntity().getEntityId());

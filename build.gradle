@@ -30,6 +30,10 @@ repositories {
         url "https://papermc.io/repo/repository/maven-public/"
     }
     maven { url "https://maven.enginehub.org/repo/" }
+    maven {
+        name = "codemc-releases"
+        url = "https://repo.codemc.io/repository/maven-releases/"
+    }
 }
 
 configurations {
@@ -38,8 +42,8 @@ configurations {
 
 dependencies {
     implementation 'org.spigotmc:spigot-api:1.18.2-R0.1-SNAPSHOT'
-    implementation 'LibsDisguises:LibsDisguises:10.0.37'
-    implementation 'com.comphenix.protocol:ProtocolLib:5.0.0'
+    implementation 'LibsDisguises:LibsDisguises:10.0.44-SNAPSHOT'
+    implementation 'com.github.retrooper.packetevents:spigot:2.3.0'
     implementation 'com.google.code.gson:gson:2.10.1'
     compileOnly files('libs/Graves-4.9.1.6.jar')
     compileOnly 'com.palmergames.bukkit.towny:towny:0.100.1.18'

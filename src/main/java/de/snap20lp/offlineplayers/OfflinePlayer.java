@@ -1,11 +1,8 @@
 package de.snap20lp.offlineplayers;
 
-import com.comphenix.protocol.wrappers.WrappedGameProfile;
+import com.github.retrooper.packetevents.protocol.player.UserProfile;
 import me.libraryaddict.disguise.DisguiseAPI;
-import me.libraryaddict.disguise.disguisetypes.DisguiseType;
-import me.libraryaddict.disguise.disguisetypes.MiscDisguise;
-import me.libraryaddict.disguise.disguisetypes.MobDisguise;
-import me.libraryaddict.disguise.disguisetypes.TargetedDisguise;
+import me.libraryaddict.disguise.disguisetypes.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -306,7 +303,7 @@ public class OfflinePlayer implements Listener {
                 entityType = EntityType.valueOf(OfflinePlayers.getInstance().getConfig().getString("OfflinePlayer.cloneEntity"));
                 if (entityType == EntityType.PLAYER) {
                     if (player == null)
-                        targetedDisguise = new me.libraryaddict.disguise.disguisetypes.PlayerDisguise(WrappedGameProfile.fromOfflinePlayer(offlinePlayer), WrappedGameProfile.fromOfflinePlayer(offlinePlayer));
+                        targetedDisguise = new PlayerDisguise(new UserProfile(offlinePlayer.getUniqueId(), offlinePlayer.getName()), new UserProfile(offlinePlayer.getUniqueId(), offlinePlayer.getName()));
                     else
                         targetedDisguise = new me.libraryaddict.disguise.disguisetypes.PlayerDisguise(player.getName());
                 } else {

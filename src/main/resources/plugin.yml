@@ -6,8 +6,9 @@ authors:
 api-version: 1.13
 main: de.snap20lp.offlineplayers.OfflinePlayers
 
+depend: [ "packetevents", "LibsDisguises" ]
+
 softdepend:
-  - LibsDisguises
   - Towny
   - Multiverse-Inventories
   - DepartedDepot
