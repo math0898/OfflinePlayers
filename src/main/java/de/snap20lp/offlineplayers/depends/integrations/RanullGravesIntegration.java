@@ -55,5 +55,9 @@ public class RanullGravesIntegration implements Listener {
         Grave grave = graveManager.createGrave(event.getOfflinePlayer().getCloneEntity(), drops);
         grave.setOwnerUUID(event.getOfflinePlayer().getOfflinePlayer().getUniqueId());
         grave.setOwnerName(event.getOfflinePlayer().getOfflinePlayer().getName());
+        event.getOfflinePlayer().getSavedInventoryContents().clear();
+        event.getOfflinePlayer().getAddedItems().clear();
+        event.getOfflinePlayer().getSavedArmorContents().clear();
+        graveManager.placeGrave(event.getOfflinePlayer().getCloneEntity().getLocation(), grave);
     }
 }
